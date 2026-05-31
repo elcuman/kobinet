@@ -12,6 +12,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_mail import Mail, Message as MailMessage
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 LISTING_DAYS   = 30
 
