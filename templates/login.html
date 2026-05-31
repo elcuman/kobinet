@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Giriş — KOBİNET{% endblock %}
+{% block extra_head %}
+<style>
+.auth-page{min-height:calc(100vh - 53px);display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.auth-box{width:100%;max-width:380px}
+.auth-head{margin-bottom:24px}
+.auth-head h1{font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--gray-900)}
+.auth-head p{font-size:13.5px;color:var(--gray-500);margin-top:4px}
+.auth-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px}
+.auth-foot{text-align:center;margin-top:16px;font-size:13px;color:var(--gray-500)}
+.auth-foot a{color:var(--gray-900);font-weight:500}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-box">
+    <div class="auth-head">
+      <h1>Giriş yap</h1>
+      <p>Hesabınıza erişmek için bilgilerinizi girin</p>
+    </div>
+    <div class="auth-card">
+      <form method="POST">
+        <div class="fg"><label class="label">E-Posta</label><input name="email" type="email" class="input" placeholder="sirket@ornek.com" required></div>
+        <div class="fg"><label class="label">Şifre</label><input name="password" type="password" class="input" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-dark btn-full" style="margin-top:4px;">Giriş Yap →</button>
+      </form>
+    </div>
+    <div class="auth-foot">Hesabınız yok mu? <a href="/register">Kayıt olun</a></div>
+  </div>
+</div>
+{% endblock %}

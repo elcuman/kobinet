@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}İlanlar — KOBİNET{% endblock %}
+{% block extra_head %}
+<style>
+  .hero{padding:52px 0 36px;border-bottom:1px solid var(--gray-200)}
+  .hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--gray-600);margin-bottom:18px}
+  .hero-tag span{width:6px;height:6px;border-radius:50%;background:#22c55e}
+  .hero h1{font-size:40px;font-weight:600;letter-spacing:-1.5px;line-height:1.1;color:var(--gray-900);max-width:540px}
+  .hero p{font-size:15px;color:var(--gray-600);margin-top:12px;max-width:400px;line-height:1.6}
+  .hero-actions{display:flex;gap:8px;margin-top:22px}
+  .hero-stats{display:flex;gap:24px;margin-top:28px;padding-top:22px;border-top:1px solid var(--gray-200)}
+  .stat-n{font-size:20px;font-weight:600;color:var(--gray-900)}
+  .stat-l{font-size:12px;color:var(--gray-500);margin-top:1px}
+
+  .search-bar{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:14px 16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:22px 0}
+  .search-bar .fg{margin:0;flex:1;min-width:130px}
+  .search-bar .input{background:var(--white);font-size:13.5px}
+
+  .filter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap}
+  .filter-info{font-size:13px;color:var(--gray-600)}
+  .filter-info strong{color:var(--gray-900)}
+  .filter-chips{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:5px;background:var(--gray-100);border:1px solid var(--gray-200);padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;color:var(--gray-700)}
+  .chip a{color:var(--gray-500);font-size:13px;line-height:1}
+
+  .l-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}
+  .l-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:16px 18px;display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--gray-900);transition:border-color .15s,box-shadow .15s;position:relative}
+  .l-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:2px;border-radius:0 2px 2px 0}
+  .l-card.buy::before{background:#22c55e}
+  .l-card.sell::before{background:#eab308}
+  .l-card:hover{border-color:var(--gray-300);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  .l-badges{display:flex;gap:5px;flex-wrap:wrap}
+  .l-title{font-size:14px;font-weight:600;line-height:1.35;color:var(--gray-900)}
+  .l-desc{font-size:13px;color:var(--gray-500);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .l-budget{font-size:13px;font-weight:500;color:var(--gray-700)}
+  .l-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--gray-100);margin-top:auto}
+  .l-company{font-size:12.5px;font-weight:500;color:var(--gray-700)}
+  .l-date{font-size:11.5px;color:var(--gray-400);margin-top:1px}
+  .l-cnt{font-size:12px;color:var(--gray-400)}
+
+  @media(max-width:600px){.hero h1{font-size:28px}.l-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-tag"><span></span>Türkiye B2B Platformu</div>
+    <h1>KOBİler için tedarik ağı</h1>
+    <p>Alım–satım ilanı ver, doğrudan teklif al. Aracısız, anında.</p>
+    <div class="hero-actions">
+      {% if current_user.is_authenticated %}
+        <a href="/create" class="btn btn-dark btn-lg">Yeni İlan Ekle</a>
+        <a href="/messages" class="btn btn-outline btn-lg">Mesajlarım</a>
+      {% else %}
+        <a href="/register" class="btn btn-dark btn-lg">Ücretsiz Başla</a>
+        <a href="/login" class="btn btn-outline btn-lg">Giriş Yap</a>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-n">{{ pagination.total }}</div><div class="stat-l">Aktif İlan</div></div>
+      <div><div class="stat-n">{{ sectors|length }}</div><div class="stat-l">Sektör</div></div>
+      <div><div class="stat-n">{{ cities|length }}</div><div class="stat-l">Şehir</div></div>
+    </div>
+  </div>
+
+  <form method="GET" class="search-bar">
+    <div class="fg"><label class="label">Arama</label><input name="q" value="{{ q }}" class="input" placeholder="İlan ara…"></div>
+    <div class="fg"><label class="label">Sektör</label><select name="sector" class="input"><option value="">Tümü</option>{% for s in sectors %}<option value="{{ s }}" {% if sector==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="fg"><label class="label">Şehir</label><select name="city" class="input"><option value="">Tümü</option>{% for c in cities %}<option value="{{ c }}" {% if city==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+    <div class="fg"><label class="label">Tip</label><select name="type" class="input"><option value="">Tümü</option><option value="buy" {% if type_=='buy' %}selected{% endif %}>Alım</option><option value="sell" {% if type_=='sell' %}selected{% endif %}>Satım</option></select></div>
+    <button type="submit" class="btn btn-dark">Ara</button>
+    {% if q or sector or city or type_ %}<a href="/" class="btn btn-ghost">Temizle</a>{% endif %}
+  </form>
+
+  <div class="filter-row">
+    <div class="filter-info"><strong>{{ pagination.total }}</strong> ilan{% if pagination.pages>1 %} · Sayfa <strong>{{ pagination.page }}</strong>/{{ pagination.pages }}{% endif %}</div>
+    <div class="filter-chips">
+      {% if q %}<span class="chip">"{{ q }}"<a href="?sector={{ sector }}&city={{ city }}&type={{ type_ }}">×</a></span>{% endif %}
+      {% if sector %}<span class="chip">{{ sector }}<a href="?q={{ q }}&city={{ city }}&type={{ type_ }}">×</a></span>{% endif %}
+      {% if city %}<span class="chip">{{ city }}<a href="?q={{ q }}&sector={{ sector }}&type={{ type_ }}">×</a></span>{% endif %}
+      {% if type_ %}<span class="chip">{{ "Alım" if type_=='buy' else "Satım" }}<a href="?q={{ q }}&sector={{ sector }}&city={{ city }}">×</a></span>{% endif %}
+      {% if current_user.is_authenticated %}<a href="/create" class="btn btn-dark btn-sm">+ İlan</a>{% endif %}
+    </div>
+  </div>
+
+  {% if listings %}
+  <div class="l-grid">
+    {% for l in listings %}
+    <a href="/listing/{{ l.id }}" class="l-card {{ l.type }}">
+      <div class="l-badges">
+        <span class="badge {{ 'badge-buy' if l.type=='buy' else 'badge-sell' }}">{{ "Alım" if l.type=='buy' else "Satım" }}</span>
+        {% if l.sector %}<span class="badge badge-sector">{{ l.sector }}</span>{% endif %}
+        {% if l.city %}<span class="badge badge-city">{{ l.city }}</span>{% endif %}
+      </div>
+      <div class="l-title">{{ l.title }}</div>
+      {% if l.description %}<div class="l-desc">{{ l.description }}</div>{% endif %}
+      {% if l.budget %}<div class="l-budget">{{ l.budget }}</div>{% endif %}
+      <div class="l-foot">
+        <div>
+          <div class="l-company">{{ l.owner.company_name if l.owner else '—' }}</div>
+          <div class="l-date">{{ l.created_at.strftime('%d.%m.%Y') }}</div>
+        </div>
+        <div class="l-cnt">{{ l.offers|length }} teklif</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% if pagination.pages>1 %}
+  <div class="pager">
+    {% if pagination.has_prev %}<a href="?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pagination.prev_num }}" class="nav-p">← Önceki</a>{% endif %}
+    {% for pn in pagination.iter_pages(left_edge=2,right_edge=2,left_current=3,right_current=3) %}
+      {% if pn %}{% if pn==pagination.page %}<span class="on">{{ pn }}</span>{% else %}<a href="?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pn }}">{{ pn }}</a>{% endif %}
+      {% else %}<span class="dots">…</span>{% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}<a href="?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pagination.next_num }}" class="nav-p">Sonraki →</a>{% endif %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="empty">
+    <h3>İlan bulunamadı</h3>
+    <p>Farklı arama deneyin ya da ilk ilanı siz ekleyin.</p>
+    {% if current_user.is_authenticated %}<a href="/create" class="btn btn-dark">+ İlan Ekle</a>{% else %}<a href="/register" class="btn btn-dark">Kayıt Ol</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

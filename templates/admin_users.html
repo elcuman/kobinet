@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Kullanıcı Yönetimi — Admin{% endblock %}
+{% block extra_head %}
+<style>
+  .adm { padding:44px 0 80px; }
+  .page-head { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:28px; }
+  .page-head h1 { font-family:var(--fd); font-size:48px; letter-spacing:1px; }
+  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:#B8C8E8; margin-bottom:10px; }
+  .breadcrumb a { color:var(--gold); }
+
+  /* SEARCH */
+  .search-row { display:flex; gap:10px; margin-bottom:22px; }
+  .search-row .form-control { max-width:380px; }
+
+  /* STATS ROW */
+  .mini-stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+  .mini-stat { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:12px 18px; display:flex; align-items:center; gap:10px; }
+  .mini-stat .n { font-family:var(--fd); font-size:24px; }
+  .mini-stat .l { font-size:13px; color:#B8C8E8; }
+
+  /* TABLE */
+  .adm-table-wrap { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-xl); overflow:hidden; }
+  .adm-table-head { padding:18px 22px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.25); display:flex; align-items:center; justify-content:space-between; }
+  .adm-table-head h2 { font-family:var(--fd); font-size:22px; letter-spacing:.5px; }
+  table.ut { width:100%; border-collapse:collapse; }
+  table.ut th { padding:12px 18px; font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#6A7FA8; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; background:rgba(0,0,0,.2); }
+  table.ut td { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+  table.ut tr:last-child td { border-bottom:none; }
+  table.ut tr:hover td { background:rgba(255,255,255,.025); }
+  .user-avatar { width:38px; height:38px; border-radius:var(--r); background:var(--gold-dim); border:1px solid rgba(234,179,8,.2); display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:18px; color:var(--gold); flex-shrink:0; }
+  .user-name-cell { display:flex; align-items:center; gap:12px; }
+  .tag-admin { background:var(--red-dim); color:var(--red); border:1px solid rgba(248,113,113,.2); padding:2px 8px; border-radius:12px; font-size:10px; font-weight:700; }
+  .tag-me    { background:var(--gold-dim); color:var(--gold); border:1px solid rgba(234,179,8,.2); padding:2px 8px; border-radius:12px; font-size:10px; font-weight:700; }
+  .actions   { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .adm-table-foot { padding:14px 22px; border-top:1px solid var(--border); background:rgba(0,0,0,.2); display:flex; align-items:center; justify-content:space-between; }
+  .result-info { font-size:13px; color:#B8C8E8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap adm">
+
+  <div class="breadcrumb">
+    <a href="/admin-panel/dashboard">Dashboard</a>
+    <span style="color:#3D4F6E;">›</span>
+    <span>Kullanıcı Yönetimi</span>
+  </div>
+
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">🔐 Admin Paneli</div>
+      <h1>KULLANICILAR</h1>
+    </div>
+    <a href="/admin-panel/dashboard" class="btn btn-ghost">← Dashboard</a>
+  </div>
+
+  <!-- ARAMA -->
+  <form method="GET" class="search-row">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="Şirket, e-posta veya sektör ara…" style="max-width:380px;">
+    <button type="submit" class="btn btn-gold">Ara</button>
+    {% if q %}<a href="/admin/users" class="btn btn-ghost">✕ Temizle</a>{% endif %}
+  </form>
+
+  <!-- MİNİ STATS -->
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <span class="n" style="color:var(--gold);">{{ pagination.total }}</span>
+      <span class="l">{% if q %}Sonuç{% else %}Toplam Kullanıcı{% endif %}</span>
+    </div>
+    <div class="mini-stat">
+      <span class="n" style="color:var(--red);">{{ pagination.items | selectattr('is_admin') | list | length }}</span>
+      <span class="l">Bu Sayfada Admin</span>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="adm-table-wrap">
+    <div class="adm-table-head">
+      <h2>{{ pagination.total }} Kullanıcı</h2>
+      <span style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">Sayfa {{ pagination.page }}/{{ pagination.pages }}</span>
+    </div>
+
+    <table class="ut">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Şirket</th>
+          <th>E-Posta</th>
+          <th>Sektör</th>
+          <th>Şehir</th>
+          <th>İlan</th>
+          <th>Kayıt</th>
+          <th>İşlemler</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">{{ u.id }}</td>
+          <td>
+            <div class="user-name-cell">
+              <div class="user-avatar">{{ u.company_name[0] }}</div>
+              <div>
+                <div style="font-weight:700;font-size:14px;">
+                  {{ u.company_name }}
+                  {% if u.is_admin %}<span class="tag-admin">ADMIN</span>{% endif %}
+                  {% if u.id == current_user.id %}<span class="tag-me">SİZ</span>{% endif %}
+                </div>
+                {% if u.phone %}<div style="font-size:12px;color:#6A7FA8;font-family:var(--fm);">{{ u.phone }}</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td style="font-size:13px;color:#B8C8E8;font-family:var(--fm);">{{ u.email }}</td>
+          <td style="font-size:13px;color:#B8C8E8;">{{ u.sector or '—' }}</td>
+          <td style="font-size:13px;color:#B8C8E8;">{{ u.city or '—' }}</td>
+          <td>
+            <a href="/profile/{{ u.id }}" style="font-family:var(--fm);font-size:14px;color:var(--gold);font-weight:700;">
+              {{ u.listings|length }}
+            </a>
+          </td>
+          <td style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">
+            {{ u.created_at.strftime('%d.%m.%Y') }}<br>
+            {{ u.created_at.strftime('%H:%M') }}
+          </td>
+          <td>
+            <div class="actions">
+              <!-- PROFİL -->
+              <a href="/profile/{{ u.id }}" class="btn btn-ghost btn-sm" title="Profili Gör">👤</a>
+
+              <!-- MESAJ -->
+              {% if u.id != current_user.id %}
+              <a href="/message/{{ u.id }}" class="btn btn-ghost btn-sm" title="Mesaj Gönder">💬</a>
+              {% endif %}
+
+              <!-- ADMİN YETKİSİ -->
+              {% if u.id != current_user.id %}
+              <form method="POST" action="/admin/user/{{ u.id }}/toggle-admin" style="display:inline;">
+                <button type="submit"
+                  class="btn btn-sm {{ 'btn-red' if u.is_admin else 'btn-cyan' }}"
+                  title="{{ 'Admin yetkisini al' if u.is_admin else 'Admin yap' }}"
+                  onclick="return confirm('{{ 'Admin yetkisi alınsın mı?' if u.is_admin else 'Admin yapılsın mı?' }}')">
+                  {{ '🔐 Al' if u.is_admin else '🔐 Ver' }}
+                </button>
+              </form>
+              {% endif %}
+
+              <!-- SİL -->
+              {% if u.id != current_user.id and not u.is_admin %}
+              <form method="POST" action="/admin/user/{{ u.id }}/delete" style="display:inline;">
+                <button type="submit" class="btn btn-red btn-sm" title="Hesabı Sil"
+                  onclick="return confirm('{{ u.company_name }} hesabı ve tüm ilanları silinecek. Emin misiniz?')">
+                  🗑 Sil
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="adm-table-foot">
+      <span class="result-info">
+        Toplam <strong>{{ pagination.total }}</strong> kullanıcı
+        {% if q %}· "<strong>{{ q }}</strong>" araması{% endif %}
+      </span>
+
+      <!-- PAGINATION -->
+      {% if pagination.pages > 1 %}
+      <div class="pager" style="padding:0;">
+        {% if pagination.has_prev %}
+          <a href="?q={{ q }}&page={{ pagination.prev_num }}" class="nav-p">‹</a>
+        {% endif %}
+        {% for pn in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+          {% if pn %}
+            {% if pn == pagination.page %}<span class="on">{{ pn }}</span>
+            {% else %}<a href="?q={{ q }}&page={{ pn }}">{{ pn }}</a>{% endif %}
+          {% else %}<span class="dots">…</span>{% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <a href="?q={{ q }}&page={{ pagination.next_num }}" class="nav-p">›</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
