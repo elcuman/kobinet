@@ -1453,16 +1453,6 @@ def mailtest_command(recipient):
         print("  • Zaman aşımı (Timeout): ağ/firewall SMTP portunu engelliyor olabilir.")
 
 # ══════════════════════════════════════════════
-# RUN — sadece lokal geliştirme (python app.py)
-# ══════════════════════════════════════════════
-
-# ... Yukarıdaki kodlar aynen kalıyor ...
-
-    except Exception as e:
-        log.error("WEBHOOK ERROR: %s", e)
-    return "ok"
-
-# ══════════════════════════════════════════════
 # RENDER TABLO OLUŞTURMA (OTOMATİK MİGRASYON)
 # ══════════════════════════════════════════════
 with app.app_context():
@@ -1476,9 +1466,17 @@ with app.app_context():
 # SEED — admin + sistem kullanıcısı (idempotent)
 # ══════════════════════════════════════════════
 def ensure_seed():
-# ... Alt kısımdaki if __name__=="__main__": bloğuna kadar her şey aynı kalıyor.
-if __name__=="__main__":
+    """Veritabanı için gerekli başlangıç verilerini (seed) hazırlar."""
+    # Eğer bu fonksiyonun içi boşsa veya hata veriyorsa geçici olarak 'pass' yazabilirsin:
+    pass
+
+# ══════════════════════════════════════════════
+# RUN — sadece lokal geliştirme (python app.py)
+# ══════════════════════════════════════════════
+if __name__ == "__main__":
+    # Eğer lokalde tabloları tekrar oluşturmak istersen:
     with app.app_context():
-        db.create_all()      # lokal SQLite hızlı başlangıç; production'da migration kullanılır
-        ensure_seed()
-    app.run(host="0.0.0.0",port=10000,debug=False)
+        db.create_all()
+    
+    # Uygulamayı başlat
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
