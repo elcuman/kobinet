@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}KOBİNET — KOBİ'ler için B2B Tedarik Ağı{% endblock %}</title>
+
+<!-- SEO -->
+<meta name="description" content="{% block meta_description %}Türkiye'deki KOBİ'ler için alım-satım platformu. İlan verin, doğrudan teklif alın — aracısız, anında.{% endblock %}"/>
+{% block robots %}{% endblock %}
+<link rel="canonical" href="{% block canonical %}{{ request.base_url }}{% endblock %}"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%272%27%20y%3D%272%27%20width%3D%2728%27%20height%3D%2728%27%20rx%3D%278%27%20fill%3D%27%23101a2b%27/%3E%3Cpath%20d%3D%27M7%207%20L22%207%20L7%2022%20Z%27%20fill%3D%27%231f9d57%27/%3E%3Cpath%20d%3D%27M25%2010%20L25%2025%20L10%2025%20Z%27%20fill%3D%27%23e0a52a%27/%3E%3C/svg%3E"/>
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="KOBİNET"/>
+<meta property="og:type" content="{% block og_type %}website{% endblock %}"/>
+<meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}"/>
+<meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}"/>
+<meta property="og:url" content="{{ request.base_url }}"/>
+<meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='og-image.png', _external=True) }}{% endblock %}"/>
+<meta property="og:locale" content="tr_TR"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="{{ self.og_title() }}"/>
+<meta name="twitter:description" content="{{ self.og_description() }}"/>
+<meta name="twitter:image" content="{{ self.og_image() }}"/>
+{% block structured_data %}{% endblock %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#101a2b; --ink-2:#1d2b41; --slate-900:#16202e; --slate-700:#374252;
+  --slate-600:#525e6e; --slate-500:#6c7888; --slate-400:#97a2b1; --slate-300:#c8cfd9;
+  --slate-200:#e3e7ed; --slate-150:#eceff3; --slate-100:#f3f5f8; --slate-50:#f8fafc;
+  --bg:#f6f8fb; --surface:#ffffff; --line:#e5e9ef; --line-strong:#d4dae2;
+  --blue:#2257b4; --blue-700:#1c498f; --blue-50:#eef3fb; --blue-100:#dde8f7;
+  --buy:#1f9d57; --buy-text:#137a41; --buy-bg:#ecfaf1; --buy-line:#bfe9cf;
+  --sell:#c98412; --sell-text:#9a630a; --sell-bg:#fdf4e3; --sell-line:#f2dcae;
+  --amber:#e0a52a; --danger:#d6453b;
+  --r-xs:6px; --r-sm:9px; --r-md:13px; --r-lg:18px; --r-xl:26px;
+  --shadow-sm:0 1px 2px rgba(16,26,43,.05);
+  --shadow:0 4px 18px -6px rgba(16,26,43,.14), 0 2px 6px -3px rgba(16,26,43,.08);
+  --shadow-lg:0 24px 56px -22px rgba(16,26,43,.30), 0 8px 22px -12px rgba(16,26,43,.16);
+  --ff-display:'Space Grotesk',sans-serif;
+  --ff-ui:'Geist',system-ui,-apple-system,sans-serif;
+
+  /* ── UYUMLULUK: eski değişken isimleri → yeni token'lar ──
+     Şablonların kendi <style> blokları hâlâ bu eski isimleri
+     kullanıyor. Tanımlı olmadıkları için tüm kenarlık/renk/köşe
+     stilleri tarayıcı varsayılanına düşüyordu. Burada eşlenir. */
+  --white:var(--surface);
+  --gray-50:var(--slate-50);   --gray-100:var(--slate-100);
+  --gray-200:var(--slate-200); --gray-300:var(--slate-300);
+  --gray-400:var(--slate-400); --gray-500:var(--slate-500);
+  --gray-600:var(--slate-600); --gray-700:var(--slate-700);
+  --gray-800:var(--slate-900); --gray-900:var(--ink);
+  --accent:var(--ink);         --accent-hover:var(--ink-2);
+  --radius:var(--r-xs);        --radius-md:var(--r-md);
+  --radius-lg:var(--r-lg);
+
+  /* ── Admin paneli koyu tema değişkenleri ──
+     admin_dashboard / admin_users / admin_listings bu isimleri
+     kullanıyor; hiçbir yerde tanımlı değildi (eski sürümde de).
+     Flask-Admin koyu paletiyle uyumlu. */
+  --bg-card:#111826; --border:rgba(255,255,255,.09); --text:#F4F8FF;
+  --gold:#EAB308;  --gold-dim:rgba(234,179,8,.12);
+  --red:#F87171;   --red-dim:rgba(248,113,113,.12);
+  --green:#4ADE80; --green-dim:rgba(74,222,128,.12);
+  --cyan:#38BDF8;
+  --fd:'Space Grotesk',sans-serif; --fm:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:8px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--ff-ui);background:var(--bg);color:var(--slate-900);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--blue-100)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+.wrap-sm{max-width:460px;margin:0 auto;padding:0 24px}
+.brand{display:inline-flex;align-items:center;gap:11px}
+.brand-mark{width:34px;height:34px;flex:none;border-radius:9px;display:block;box-shadow:0 2px 6px -2px rgba(16,26,43,.4)}
+.brand-name{font-family:var(--ff-display);font-weight:700;font-size:19px;letter-spacing:-.2px;color:var(--ink)}
+.brand-name b{color:var(--blue)}
+.nav{position:sticky;top:0;z-index:50;background:rgba(246,248,251,.82);backdrop-filter:blur(14px) saturate(1.2);border-bottom:1px solid var(--line)}
+.nav-in{height:66px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.nav-links{display:flex;align-items:center;gap:2px}
+.nav-links a{font-size:14.5px;font-weight:450;color:var(--slate-600);padding:8px 13px;border-radius:var(--r-sm);transition:.16s}
+.nav-links a:hover{color:var(--ink);background:var(--slate-100)}
+.nav-links a.on{color:var(--ink);background:var(--slate-100)}
+.nav-right{display:flex;align-items:center;gap:9px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;font-size:14.5px;font-weight:500;cursor:pointer;border:1px solid transparent;border-radius:var(--r-sm);padding:9px 17px;transition:.16s;white-space:nowrap;line-height:1.1}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:var(--ink-2)}
+.btn-ghost{background:transparent;color:var(--slate-700)}
+.btn-ghost:hover{background:var(--slate-100);color:var(--ink)}
+.btn-outline{background:var(--surface);color:var(--slate-700);border-color:var(--line-strong)}
+.btn-outline:hover{border-color:var(--slate-400);color:var(--ink)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(.93)}
+.btn-lg{padding:13px 24px;font-size:15.5px;border-radius:var(--r-md)}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-full{width:100%}
+.ico{width:17px;height:17px;flex:none}
+.nbadge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 5px;background:var(--danger);color:#fff;border-radius:9px;font-size:10.5px;font-weight:700;line-height:1;margin-left:4px}
+.fg{margin-bottom:15px}
+.label{display:block;margin-bottom:6px;font-size:12.5px;font-weight:600;letter-spacing:.2px;color:var(--slate-600)}
+.input,textarea.input,select.input{width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:11px 13px;outline:none;transition:.15s}
+.input:focus,textarea.input:focus,select.input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
+textarea.input{resize:vertical;min-height:90px;line-height:1.55}
+select.input{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath fill='%2397a2b1' d='M0 0l4.5 6 4.5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
+.panel-title{font-family:var(--ff-display);font-weight:600;font-size:20px;letter-spacing:-.4px;color:var(--ink);margin-bottom:4px}
+.muted{color:var(--slate-500);font-size:14px}
+.flashes{display:flex;flex-direction:column;gap:8px}
+.flash{font-size:14px;font-weight:500;padding:11px 15px;border-radius:var(--r-sm);border:1px solid}
+.flash.success{background:var(--buy-bg);color:var(--buy-text);border-color:var(--buy-line)}
+.flash.danger{background:#fdecec;color:#b4322a;border-color:#f3c9c6}
+.flash.info{background:var(--blue-50);color:var(--blue-700);border-color:var(--blue-100)}
+.flash.warning{background:var(--sell-bg);color:var(--sell-text);border-color:var(--sell-line)}
+.pager{display:flex;justify-content:center;align-items:center;gap:5px;padding:36px 0 0;flex-wrap:wrap}
+.pg{min-width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border-radius:var(--r-sm);font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--slate-600);transition:.15s}
+.pg:hover{border-color:var(--slate-400);color:var(--ink)}
+.pg.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pg.dots{border:none;background:transparent}
+.empty-state{text-align:center;padding:64px 24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+.empty-state h3{font-family:var(--ff-display);font-weight:600;font-size:20px;color:var(--ink);margin-bottom:8px}
+.empty-state p{font-size:14.5px;color:var(--slate-500);margin-bottom:20px}
+.badge{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:.1px;display:inline-flex;align-items:center;gap:5px}
+.b-buy{background:var(--buy-bg);color:var(--buy-text);border:1px solid var(--buy-line)}
+.b-sell{background:var(--sell-bg);color:var(--sell-text);border:1px solid var(--sell-line)}
+.b-soft{background:var(--slate-100);color:var(--slate-600);border:1px solid var(--line);font-weight:500}
+.av-blue{background:linear-gradient(135deg,#2257b4,#1c498f)}
+.av-ink{background:linear-gradient(135deg,#27384f,#16202e)}
+.av-buy{background:linear-gradient(135deg,#1f9d57,#157a42)}
+.av-sell{background:linear-gradient(135deg,#d2922a,#a9700f)}
+.av-slate{background:linear-gradient(135deg,#5a6776,#3a4452)}
+.av-plum{background:linear-gradient(135deg,#7a5aa0,#574079)}
+.verify-banner{background:var(--sell-bg);border-bottom:1px solid var(--sell-line)}
+.verify-banner .vb-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;flex-wrap:wrap}
+.verify-banner .vb-tx{font-size:13.5px;color:var(--sell-text);font-weight:500}
+footer{border-top:1px solid var(--line);margin-top:64px;padding:44px 0 30px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
+.foot-about{max-width:280px}
+.foot-about p{font-size:13.5px;color:var(--slate-500);margin-top:14px;line-height:1.6}
+.foot-col h4{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--slate-400);margin-bottom:13px}
+.foot-col a{display:block;font-size:14px;color:var(--slate-600);padding:5px 0;transition:.15s}
+.foot-col a:hover{color:var(--ink)}
+.foot-bot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:38px;padding-top:22px;border-top:1px solid var(--line)}
+.foot-bot .c{font-size:13px;color:var(--slate-400)}
+.foot-bot .soc{display:flex;gap:8px}
+.foot-bot .soc a{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--slate-500);transition:.15s}
+.foot-bot .soc a:hover{border-color:var(--slate-400);color:var(--ink)}
+@media(max-width:980px){ .foot-grid{grid-template-columns:1fr 1fr} .nav-links{display:none} }
+@media(max-width:680px){ .wrap{padding:0 18px} .foot-grid{grid-template-columns:1fr} }
+
+/* ════════════════════════════════════════════════════════════
+   UYUMLULUK KATMANI — eski şablon class isimlerini yeni tasarım
+   token'larına eşler. base.html yeniden tasarlandığında yalnızca
+   index.html yeni vokabülere geçirilmişti; diğer 15 şablon hâlâ
+   bu eski isimleri kullanıyor. Burası onların görünümünü yeni
+   ink/blue/slate paletine bağlar — tek dosyada bütün ekranlar
+   tutarlı hale gelir.
+   ════════════════════════════════════════════════════════════ */
+
+/* — Butonlar (eski → yeni) — */
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:hover{background:var(--ink-2);color:#fff}
+.btn-success,.btn-green{background:var(--buy);color:#fff}
+.btn-success:hover,.btn-green:hover{filter:brightness(.94);color:#fff}
+.btn-red{background:var(--danger);color:#fff}
+.btn-red:hover{filter:brightness(.93);color:#fff}
+.btn-gold{background:var(--sell);color:#fff}
+.btn-gold:hover{filter:brightness(.94);color:#fff}
+.btn-cyan{background:var(--blue);color:#fff}
+.btn-cyan:hover{background:var(--blue-700);color:#fff}
+
+/* — Kart (padding'siz kapsayıcı + bölümler) — */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card-head h2{font-family:var(--ff-display);font-weight:600;font-size:16px;letter-spacing:-.2px;color:var(--ink)}
+.card-body{padding:20px}
+.card-foot{padding:14px 20px;border-top:1px solid var(--line);background:var(--slate-50);display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* — Rozetler (eski → yeni renk değişkenleri) — */
+.badge-buy{background:var(--buy-bg);color:var(--buy-text);border:1px solid var(--buy-line)}
+.badge-sell{background:var(--sell-bg);color:var(--sell-text);border:1px solid var(--sell-line)}
+.badge-sector{background:var(--slate-100);color:var(--slate-600);border:1px solid var(--line)}
+.badge-city{background:var(--slate-50);color:var(--slate-500);border:1px solid var(--line)}
+
+/* — Yerleşim — */
+.wrap-md{max-width:760px;margin:0 auto;padding:0 24px}
+.two-col{display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.hr{height:1px;background:var(--line);margin:20px 0;border:none}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;gap:12px}
+.sh h2{font-family:var(--ff-display);font-weight:600;font-size:17px;letter-spacing:-.3px;color:var(--ink)}
+
+/* — Diğer yardımcılar — */
+.form-hint{font-size:12px;color:var(--slate-400);margin-top:5px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--slate-400)}
+.ml-1{margin-left:4px}
+.empty{text-align:center;padding:64px 24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);color:var(--slate-500)}
+.empty h3{font-family:var(--ff-display);font-weight:600;font-size:19px;color:var(--ink);margin-bottom:8px}
+.empty p{font-size:14.5px;color:var(--slate-500);margin-bottom:18px}
+
+/* — Eski pager kalıbı (çıplak <a>, span.on, span.dots, .nav-p) — */
+.pager a:not(.pg),.nav-p{min-width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border-radius:var(--r-sm);font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--slate-600);transition:.15s}
+.pager a:not(.pg):hover,.nav-p:hover{border-color:var(--slate-400);color:var(--ink)}
+.pager span.on{min-width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border-radius:var(--r-sm);font-size:14px;font-weight:500;background:var(--ink);color:#fff;border:1px solid var(--ink)}
+.pager span.dots{min-width:24px;height:38px;display:inline-flex;align-items:center;justify-content:center;color:var(--slate-400)}
+
+@media(max-width:820px){ .two-col{grid-template-columns:1fr} .three-col{grid-template-columns:1fr 1fr} }
+@media(max-width:560px){ .three-col,.form-grid{grid-template-columns:1fr} }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a href="/" class="brand" aria-label="KOBİNET">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="2" y="2" width="28" height="28" rx="8" fill="#101a2b"/>
+        <path d="M7 7 L22 7 L7 22 Z" fill="#1f9d57"/>
+        <path d="M25 10 L25 25 L10 25 Z" fill="#e0a52a"/>
+      </svg>
+      <span class="brand-name">KOB<b>İ</b>NET</span>
+    </a>
+    <div class="nav-links">
+      <a href="/" class="{{ 'on' if request.path=='/' }}">İlanlar</a>
+      {% if current_user.is_authenticated %}
+      <a href="/create" class="{{ 'on' if request.path=='/create' }}">Yeni ilan</a>
+      <a href="/messages" class="{{ 'on' if request.path=='/messages' }}">Mesajlar{% if unread_messages %}<span class="nbadge">{{ unread_messages if unread_messages < 100 else '99+' }}</span>{% endif %}</a>
+      <a href="/my-offers" class="{{ 'on' if request.path=='/my-offers' }}">Tekliflerim{% if new_offers %}<span class="nbadge">{{ new_offers if new_offers < 100 else '99+' }}</span>{% endif %}</a>
+      <a href="/saved-searches" class="{{ 'on' if request.path=='/saved-searches' }}">Bildirimler</a>
+      {% if current_user.is_admin %}<a href="/admin-panel/dashboard" style="color:var(--blue);font-weight:500">Admin</a>{% endif %}
+      {% else %}
+      <a href="/#sektorler">Sektörler</a>
+      <a href="/#nasil">Nasıl çalışır</a>
+      {% endif %}
+    </div>
+    <div class="nav-right">
+      {% if current_user.is_authenticated %}
+        <a href="/profile/{{ current_user.id }}" class="btn btn-outline btn-sm">{{ current_user.company_name|truncate(16) }}</a>
+        <a href="/profile/edit" class="btn btn-ghost btn-sm">Profil</a>
+        <a href="/logout" class="btn btn-ghost btn-sm">Çıkış</a>
+      {% else %}
+        <a href="/login" class="btn btn-ghost">Giriş</a>
+        <a href="/register" class="btn btn-primary">Ücretsiz kayıt</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% if config.REQUIRE_EMAIL_VERIFICATION and current_user.is_authenticated and not current_user.email_verified and not current_user.is_admin %}
+<div class="verify-banner">
+  <div class="wrap vb-in">
+    <span class="vb-tx">✉️ E-posta adresiniz doğrulanmadı — ilan vermek ve teklif yapmak için doğrulama gerekir.</span>
+    {% if config.MAIL_CONFIGURED %}
+    <form method="POST" action="/resend-verification" style="margin:0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <button class="btn btn-sm" style="background:var(--sell-text);color:#fff">Doğrulama Mailini Gönder</button>
+    </form>
+    {% elif dev_verify_link %}
+    <a href="{{ dev_verify_link }}" class="btn btn-sm" style="background:var(--sell-text);color:#fff">Hesabı Doğrula →</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% with msgs = get_flashed_messages(with_categories=true) %}{% if msgs %}
+<div class="wrap" style="padding-top:14px">
+  <div class="flashes">
+    {% for cat,msg in msgs %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  </div>
+</div>
+{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a href="/" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="#101a2b"/>
+            <path d="M7 7 L22 7 L7 22 Z" fill="#1f9d57"/>
+            <path d="M25 10 L25 25 L10 25 Z" fill="#e0a52a"/>
+          </svg>
+          <span class="brand-name">KOB<b>İ</b>NET</span>
+        </a>
+        <p>İşletmeler arası alım–satım için Türkiye'nin doğrulanmış tedarik ağı. Aracısız, komisyonsuz, doğrudan.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Platform</h4>
+        <a href="/">İlanlar</a><a href="/#sektorler">Sektörler</a><a href="/#nasil">Nasıl çalışır</a>
+      </div>
+      <div class="foot-col">
+        <h4>İşletmeler</h4>
+        <a href="/create">İlan ver</a><a href="/my-offers">Tekliflerim</a><a href="/messages">Mesajlar</a><a href="/saved-searches">Bildirimler</a>
+      </div>
+      <div class="foot-col">
+        <h4>Hesap</h4>
+        {% if current_user.is_authenticated %}<a href="/profile/{{ current_user.id }}">Profilim</a><a href="/profile/edit">Profili düzenle</a><a href="/logout">Çıkış</a>{% else %}<a href="/login">Giriş</a><a href="/register">Kayıt ol</a>{% endif %}
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span class="c">© 2026 KOBİNET · Tüm hakları saklıdır</span>
+      <div class="soc">
+        <a href="#" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C21.4 8.65 22 11.3 22 14.6V21h-4v-5.7c0-1.36-.02-3.1-1.9-3.1-1.9 0-2.2 1.48-2.2 3v5.8h-4z"/></svg></a>
+        <a href="#" aria-label="X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.2 2H21l-6.5 7.4L22 22h-6.2l-4.9-6.4L5.3 22H2.5l7-8L2 2h6.3l4.4 5.9zm-1.1 18h1.7L7 3.7H5.2z"/></svg></a>
+        <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

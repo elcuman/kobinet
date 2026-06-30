@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block robots %}<meta name="robots" content="noindex,nofollow"/>{% endblock %}
+{% block title %}Tekliflerim — KOBİNET{% endblock %}
+{% block extra_head %}
+<style>
+.mo-wrap{padding:40px 0 72px}
+.mo-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.mo-head h1{font-size:22px;font-weight:600;letter-spacing:-.4px}
+
+/* Sekmeler */
+.mo-tabs{display:inline-flex;gap:4px;background:var(--slate-100);border:1px solid var(--line);border-radius:var(--r-md);padding:4px;margin-bottom:18px}
+.mo-tab{padding:7px 16px;border-radius:var(--r-sm);font-size:13.5px;font-weight:500;color:var(--slate-500);text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.mo-tab:hover{color:var(--ink)}
+.mo-tab.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+.mo-tab .cnt{font-size:11px;font-weight:700;background:var(--slate-200);color:var(--slate-600);min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.mo-tab.on .cnt{background:var(--ink);color:#fff}
+
+/* Ürün filtre çubuğu */
+.mo-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.fchip{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;font-weight:500;color:var(--slate-600);background:var(--surface);text-decoration:none;transition:.15s;max-width:280px}
+.fchip:hover{border-color:var(--slate-400);color:var(--ink)}
+.fchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fchip .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fchip .c{font-size:10.5px;font-weight:700;background:var(--slate-100);color:var(--slate-500);min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0}
+.fchip.on .c{background:rgba(255,255,255,.22);color:#fff}
+
+/* Teklif kartı */
+.offer-row{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;transition:border-color .15s}
+.offer-row:hover{border-color:var(--slate-300)}
+.or-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.or-bidder{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.or-av{width:30px;height:30px;border-radius:var(--r-sm);background:var(--slate-100);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--slate-600);flex-shrink:0}
+.or-bidder a{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none}
+.or-bidder a:hover{text-decoration:underline}
+.or-listing{font-size:12.5px;color:var(--slate-500);margin-bottom:4px}
+.or-listing a{color:var(--slate-600);font-weight:500}
+.or-listing a:hover{color:var(--ink)}
+.or-price{font-size:18px;font-weight:600;color:var(--ink)}
+.or-msg{font-size:13px;color:var(--slate-500);margin-top:6px;line-height:1.5}
+.or-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.or-date{font-size:12px;color:var(--slate-400);font-family:var(--fm,monospace);text-align:right;white-space:nowrap}
+.or-status{padding:2px 8px;border-radius:4px;font-size:11.5px;font-weight:500}
+.os-active{background:var(--buy-bg);color:var(--buy-text);border:1px solid var(--buy-line)}
+.os-dead{background:var(--sell-bg);color:var(--sell-text);border:1px solid var(--sell-line)}
+@media(max-width:640px){.offer-row{grid-template-columns:1fr}.or-right{align-items:flex-start}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap mo-wrap">
+  <div class="mo-head">
+    <h1>Tekliflerim</h1>
+  </div>
+
+  <div class="mo-tabs">
+    <a href="/my-offers?view=received" class="mo-tab {{ 'on' if view=='received' }}">
+      Aldığım Teklifler <span class="cnt">{{ total_received }}</span>
+    </a>
+    <a href="/my-offers?view=made" class="mo-tab {{ 'on' if view=='made' }}">
+      Verdiğim Teklifler <span class="cnt">{{ total_made }}</span>
+    </a>
+  </div>
+
+  {% if view=='received' %}
+    {# ── Ürün bazlı filtre çubuğu ── #}
+    {% if filter_listings %}
+    <div class="mo-filter">
+      <a href="/my-offers?view=received" class="fchip {{ 'on' if not listing_filter }}">
+        <span class="t">Tüm ürünler</span><span class="c">{{ total_received }}</span>
+      </a>
+      {% for l, cnt in filter_listings %}
+      <a href="/my-offers?view=received&listing={{ l.id }}" class="fchip {{ 'on' if listing_filter==l.id }}">
+        <span class="t">{{ l.title }}</span><span class="c">{{ cnt }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if offers %}
+      {% for o in offers %}
+      <div class="offer-row">
+        <div>
+          <div class="or-badges">
+            {% if o.listing %}
+              <span class="badge {{ 'badge-buy' if o.listing.type=='buy' else 'badge-sell' }}">{{ "Alım" if o.listing.type=='buy' else "Satım" }}</span>
+              {% if o.listing.sector %}<span class="badge badge-sector">{{ o.listing.sector }}</span>{% endif %}
+              {% if o.listing.is_visible %}<span class="or-status os-active">Aktif</span>{% else %}<span class="or-status os-dead">Süresi Doldu</span>{% endif %}
+            {% endif %}
+          </div>
+          <div class="or-bidder">
+            <div class="or-av">{{ o.bidder.company_name[0]|upper if o.bidder else '?' }}</div>
+            {% if o.bidder %}<a href="/profile/{{ o.bidder.id }}">{{ o.bidder.company_name }}</a>{% else %}<span>Silinmiş kullanıcı</span>{% endif %}
+          </div>
+          <div class="or-listing">İlan:
+            {% if o.listing %}<a href="/listing/{{ o.listing_id }}">{{ o.listing.title }}</a>{% else %}<span style="color:var(--slate-400)">Silinmiş ilan</span>{% endif %}
+          </div>
+          <div class="or-price">{{ o.price }}</div>
+          {% if o.message %}<div class="or-msg">{{ o.message }}</div>{% endif %}
+        </div>
+        <div class="or-right">
+          <div class="or-date">{{ o.created_at.strftime('%d.%m.%Y') }}<br>{{ o.created_at.strftime('%H:%M') }}</div>
+          {% if o.bidder %}<a href="/message/{{ o.bidder.id }}" class="btn btn-dark btn-sm" style="white-space:nowrap">Mesaj Gönder</a>{% endif %}
+          {% if o.listing %}<a href="/listing/{{ o.listing_id }}" class="btn btn-ghost btn-sm">İlana Git</a>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty">
+      <h3>{{ 'Bu ürüne henüz teklif gelmedi' if listing_filter else 'Henüz teklif almadınız' }}</h3>
+      <p>İlanlarınıza gelen teklifler burada listelenir.</p>
+      <a href="/create" class="btn btn-dark">Yeni İlan Ver</a>
+    </div>
+    {% endif %}
+
+  {% else %}
+    {# ── Verdiğim teklifler ── #}
+    {% if offers %}
+      {% for o in offers %}
+      <div class="offer-row">
+        <div>
+          <div class="or-badges">
+            {% if o.listing %}
+              <span class="badge {{ 'badge-buy' if o.listing.type=='buy' else 'badge-sell' }}">{{ "Alım" if o.listing.type=='buy' else "Satım" }}</span>
+              {% if o.listing.sector %}<span class="badge badge-sector">{{ o.listing.sector }}</span>{% endif %}
+              {% if o.listing.is_visible %}<span class="or-status os-active">Aktif İlan</span>{% else %}<span class="or-status os-dead">Süresi Doldu</span>{% endif %}
+            {% endif %}
+          </div>
+          <div class="or-listing">İlan:
+            {% if o.listing %}<a href="/listing/{{ o.listing_id }}">{{ o.listing.title }}</a>{% else %}<span style="color:var(--slate-400)">Silinmiş ilan</span>{% endif %}
+          </div>
+          <div class="or-price">{{ o.price }}</div>
+          {% if o.message %}<div class="or-msg">{{ o.message }}</div>{% endif %}
+        </div>
+        <div class="or-right">
+          <div class="or-date">{{ o.created_at.strftime('%d.%m.%Y') }}<br>{{ o.created_at.strftime('%H:%M') }}</div>
+          {% if o.listing %}<a href="/listing/{{ o.listing_id }}" class="btn btn-ghost btn-sm">İlana Git</a>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty">
+      <h3>Henüz teklif vermediniz</h3>
+      <p>İlanlara göz atın ve teklif gönderin.</p>
+      <a href="/" class="btn btn-dark">İlanlara Git</a>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

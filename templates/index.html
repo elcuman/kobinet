@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% block title %}KOBİNET — KOBİ'ler için B2B Tedarik Ağı{% endblock %}
+{% block canonical %}{{ url_for('index', _external=True) }}{% endblock %}
+{% block extra_head %}
+<style>
+/* ===== HERO ===== */
+.hero{padding:62px 0 30px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:54px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:6px 14px 6px 11px;font-size:12.5px;font-weight:500;color:var(--slate-600);box-shadow:var(--shadow-sm)}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--buy);box-shadow:0 0 0 3px var(--buy-bg);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.hero h1{font-family:var(--ff-display);font-weight:700;font-size:54px;line-height:1.04;letter-spacing:-1.6px;color:var(--ink);margin:20px 0 0;text-wrap:balance}
+.hero h1 .hl{position:relative;white-space:nowrap}
+.hero h1 .hl::after{content:'';position:absolute;left:-2px;right:-2px;bottom:6px;height:13px;background:linear-gradient(90deg,var(--buy-bg),var(--sell-bg));z-index:-1;border-radius:3px}
+.hero p.lede{font-size:17.5px;color:var(--slate-600);margin-top:18px;max-width:480px;line-height:1.55;text-wrap:pretty}
+
+/* SEARCH PANEL */
+.search{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:7px}
+.search-tabs{display:flex;gap:4px;padding:5px 5px 9px}
+.s-tab{flex:none;font-size:13px;font-weight:500;color:var(--slate-500);padding:6px 13px;border-radius:30px;cursor:pointer;border:1px solid transparent;transition:.15s;background:transparent}
+.s-tab.on{color:var(--ink);background:var(--slate-100);border-color:var(--line)}
+.s-tab .sw{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px;transform:translateY(-1px)}
+.s-row{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:8px;align-items:stretch;background:var(--slate-50);border:1px solid var(--line);border-radius:var(--r-md);padding:8px}
+.s-field{display:flex;flex-direction:column;justify-content:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;min-width:0;transition:.15s}
+.s-field:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
+.s-field label{font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--slate-400)}
+.s-field input,.s-field select{border:none;outline:none;background:transparent;font-family:inherit;font-size:14.5px;color:var(--ink);width:100%;padding:2px 0 0;cursor:pointer}
+.s-field input{cursor:text}
+.s-field select{appearance:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath fill='%2397a2b1' d='M0 0l4.5 6 4.5-6z'/%3E%3C/svg%3E") no-repeat right center}
+.s-go{align-self:stretch}
+
+/* STATS */
+.hero-stats{display:flex;gap:30px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.hs-n{font-family:var(--ff-display);font-weight:600;font-size:24px;color:var(--ink);letter-spacing:-.5px}
+.hs-l{font-size:12.5px;color:var(--slate-500);margin-top:1px}
+
+/* HERO RIGHT — canlı akış paneli */
+.feed{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:18px;position:relative;overflow:hidden}
+.feed::before{content:'';position:absolute;inset:0 0 auto;height:118px;background:linear-gradient(160deg,var(--ink),#223651);z-index:0}
+.feed-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:6px 6px 16px;color:#fff}
+.feed-head .t{font-family:var(--ff-display);font-weight:600;font-size:15px;letter-spacing:-.2px}
+.feed-head .live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:#bfe9cf;background:rgba(31,157,87,.18);border:1px solid rgba(31,157,87,.35);padding:4px 9px;border-radius:20px}
+.feed-head .live i{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 1.8s infinite}
+.feed-list{position:relative;z-index:1;display:flex;flex-direction:column;gap:9px}
+.fi{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 13px;box-shadow:var(--shadow-sm);transition:.18s}
+.fi:hover{transform:translateY(-1px);box-shadow:var(--shadow);border-color:var(--line-strong)}
+.fi-av{width:38px;height:38px;flex:none;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:600;font-size:13px;color:#fff}
+.fi-main{min-width:0;flex:1}
+.fi-top{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.fi-tag{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:5px;letter-spacing:.2px}
+.tag-buy{background:var(--buy-bg);color:var(--buy-text);border:1px solid var(--buy-line)}
+.tag-sell{background:var(--sell-bg);color:var(--sell-text);border:1px solid var(--sell-line)}
+.fi-co{font-size:12px;color:var(--slate-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-title{font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-meta{text-align:right;flex:none}
+.fi-bid{font-family:var(--ff-display);font-weight:600;font-size:13px;color:var(--ink)}
+.fi-ago{font-size:11px;color:var(--slate-400);margin-top:1px}
+.feed-foot{position:relative;z-index:1;text-align:center;margin-top:14px}
+.feed-foot a{font-size:13px;font-weight:500;color:var(--blue)}
+
+/* ===== LOGO ROW ===== */
+.proof{padding:30px 0 6px}
+.proof-l{text-align:center;font-size:12px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--slate-400);margin-bottom:18px}
+.proof-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.proof-co{display:flex;align-items:center;gap:9px;color:var(--slate-400);font-family:var(--ff-display);font-weight:600;font-size:15px;letter-spacing:.2px;opacity:.9;filter:grayscale(1)}
+.proof-co .pm{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
+
+/* ===== SECTOR STRIP ===== */
+.section{padding:54px 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.sec-head h2{font-family:var(--ff-display);font-weight:600;font-size:28px;letter-spacing:-.8px;color:var(--ink)}
+.sec-head p{font-size:14.5px;color:var(--slate-500);margin-top:5px}
+.sec-link{font-size:14px;font-weight:500;color:var(--blue);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sectors{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sec-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 17px;display:flex;align-items:center;gap:13px;transition:.18s;cursor:pointer}
+.sec-card:hover{border-color:var(--line-strong);box-shadow:var(--shadow);transform:translateY(-2px)}
+.sec-ic{width:40px;height:40px;flex:none;border-radius:10px;background:var(--slate-100);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.sec-ic svg{width:21px;height:21px;stroke:var(--slate-600);stroke-width:1.6;fill:none}
+.sec-tx .n{font-weight:500;font-size:14.5px;color:var(--ink)}
+.sec-tx .c{font-size:12.5px;color:var(--slate-500);margin-top:1px}
+
+/* ===== LISTINGS ===== */
+.lst-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.segs{display:inline-flex;background:var(--slate-100);border:1px solid var(--line);border-radius:30px;padding:3px}
+.seg{font-size:13.5px;font-weight:500;color:var(--slate-600);padding:7px 16px;border-radius:30px;cursor:pointer;transition:.15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:7px}
+.seg.on{background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm)}
+.seg .sw{width:8px;height:8px;border-radius:2px}
+.lst-sort{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--slate-500)}
+.lst-sort select{font-family:inherit;font-size:13.5px;color:var(--ink);border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);padding:7px 11px;cursor:pointer;outline:none}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 19px;display:flex;flex-direction:column;gap:13px;position:relative;transition:.18s;overflow:hidden}
+.card::before{content:'';position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 3px 3px 0}
+.card.buy::before{background:var(--buy)}
+.card.sell::before{background:var(--sell)}
+.card:hover{border-color:var(--line-strong);box-shadow:var(--shadow);transform:translateY(-2px)}
+.c-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:.1px;display:inline-flex;align-items:center;gap:5px}
+.b-buy{background:var(--buy-bg);color:var(--buy-text);border:1px solid var(--buy-line)}
+.b-sell{background:var(--sell-bg);color:var(--sell-text);border:1px solid var(--sell-line)}
+.b-soft{background:var(--slate-100);color:var(--slate-600);border:1px solid var(--line);font-weight:500}
+.c-title{font-family:var(--ff-display);font-weight:500;font-size:17px;line-height:1.3;letter-spacing:-.3px;color:var(--ink)}
+.c-desc{font-size:13.5px;color:var(--slate-500);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c-budget{display:flex;align-items:baseline;gap:7px;margin-top:2px}
+.c-budget .bl{font-size:11.5px;color:var(--slate-400);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.c-budget .bv{font-family:var(--ff-display);font-weight:600;font-size:16px;color:var(--ink)}
+.c-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:13px;border-top:1px solid var(--line);margin-top:auto}
+.c-co{display:flex;align-items:center;gap:9px;min-width:0}
+.c-av{width:30px;height:30px;flex:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:600;font-size:11.5px;color:#fff}
+.c-co-tx{min-width:0}
+.c-co-n{font-size:12.5px;font-weight:500;color:var(--slate-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+.c-co-n .vchk{width:13px;height:13px;flex:none}
+.c-co-m{font-size:11px;color:var(--slate-400)}
+.c-bids{text-align:right;flex:none}
+.c-bids .n{font-family:var(--ff-display);font-weight:600;font-size:14px;color:var(--blue)}
+.c-bids .l{font-size:10.5px;color:var(--slate-400)}
+
+/* ===== HOW IT WORKS ===== */
+.how{background:var(--ink);color:#fff;border-radius:var(--r-xl);padding:50px 48px;position:relative;overflow:hidden}
+.how::after{content:'';position:absolute;right:-80px;top:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(34,87,180,.34),transparent 70%)}
+.how-head{position:relative;z-index:1;max-width:520px;margin-bottom:34px}
+.how-head .ey{font-size:12.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--amber)}
+.how-head h2{font-family:var(--ff-display);font-weight:600;font-size:30px;letter-spacing:-.8px;margin-top:10px;color:#fff}
+.how-head p{font-size:15px;color:#aab8cc;margin-top:10px;line-height:1.55}
+.steps{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);padding:24px 22px}
+.step-n{font-family:var(--ff-display);font-weight:700;font-size:15px;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--amber);border:1px solid rgba(255,255,255,.12)}
+.step h3{font-family:var(--ff-display);font-weight:600;font-size:18px;margin:15px 0 7px;letter-spacing:-.3px}
+.step p{font-size:14px;color:#aab8cc;line-height:1.55}
+
+/* ===== CTA ===== */
+.cta{text-align:center;padding:18px 0 4px}
+.cta h2{font-family:var(--ff-display);font-weight:700;font-size:38px;letter-spacing:-1.2px;color:var(--ink);text-wrap:balance}
+.cta p{font-size:16px;color:var(--slate-600);margin:14px auto 26px;max-width:440px}
+.cta-btns{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+.cta-note{margin-top:16px;font-size:13px;color:var(--slate-400)}
+
+/* ===== FOOTER ===== */
+footer{border-top:1px solid var(--line);margin-top:64px;padding:44px 0 30px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
+.foot-about{max-width:280px}
+.foot-about p{font-size:13.5px;color:var(--slate-500);margin-top:14px;line-height:1.6}
+.foot-col h4{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--slate-400);margin-bottom:13px}
+.foot-col a{display:block;font-size:14px;color:var(--slate-600);padding:5px 0;transition:.15s}
+.foot-col a:hover{color:var(--ink)}
+.foot-bot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:38px;padding-top:22px;border-top:1px solid var(--line)}
+.foot-bot .c{font-size:13px;color:var(--slate-400)}
+.foot-bot .soc{display:flex;gap:8px}
+.foot-bot .soc a{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--slate-500);transition:.15s}
+.foot-bot .soc a:hover{border-color:var(--slate-400);color:var(--ink)}
+
+/* avatar palette helpers */
+.av-blue{background:linear-gradient(135deg,#2257b4,#1c498f)}
+.av-ink{background:linear-gradient(135deg,#27384f,#16202e)}
+.av-buy{background:linear-gradient(135deg,#1f9d57,#157a42)}
+.av-sell{background:linear-gradient(135deg,#d2922a,#a9700f)}
+.av-slate{background:linear-gradient(135deg,#5a6776,#3a4452)}
+.av-plum{background:linear-gradient(135deg,#7a5aa0,#574079)}
+
+@media(max-width:980px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hero h1{font-size:44px}
+  .sectors{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+}
+@media(max-width:680px){
+  .wrap{padding:0 18px}
+  .hero{padding:42px 0 20px}
+  .hero h1{font-size:35px;letter-spacing:-1px}
+  .s-row{grid-template-columns:1fr 1fr}
+  .s-go{grid-column:1/-1}
+  .hero-stats{gap:20px;flex-wrap:wrap}
+  .sectors,.grid,.steps,.foot-grid{grid-template-columns:1fr}
+  .how{padding:34px 24px}
+  .cta h2{font-size:29px}
+}
+</style>
+</head>
+
+</style>
+{% endblock %}
+{% block content %}
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot"></span>Türkiye'nin KOBİ tedarik ağı</span>
+      <h1>İşletmeler arası <span class="hl">alım–satım</span>, aracısız ve doğrudan.</h1>
+      <p class="lede">İhtiyacını ya da fazlanı ilana dök, doğrulanmış firmalardan teklif topla, doğrudan anlaş. Komisyon yok, aracı yok.</p>
+
+      <!-- SEARCH -->
+      <form method="GET" action="/" class="search" id="searchForm">
+        <input type="hidden" name="type" id="typeField" value="{{ type_ }}"/>
+        <div class="search-tabs">
+          <button type="button" class="s-tab {{ 'on' if not type_ }}" data-type="">Tüm ilanlar</button>
+          <button type="button" class="s-tab {{ 'on' if type_=='buy' }}" data-type="buy"><span class="sw" style="background:var(--buy)"></span>Alım ilanları</button>
+          <button type="button" class="s-tab {{ 'on' if type_=='sell' }}" data-type="sell"><span class="sw" style="background:var(--sell)"></span>Satım ilanları</button>
+        </div>
+        <div class="s-row">
+          <div class="s-field">
+            <label>Ne arıyorsunuz</label>
+            <input type="text" name="q" placeholder="Ürün, malzeme, hizmet…" value="{{ q }}"/>
+          </div>
+          <div class="s-field">
+            <label>Sektör</label>
+            <select name="sector">
+              <option value="">Tüm sektörler</option>
+              {% for s in sectors %}<option value="{{ s }}" {{ 'selected' if sector==s }}>{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="s-field">
+            <label>Şehir</label>
+            <select name="city">
+              <option value="">Tüm Türkiye</option>
+              {% for c in cities %}<option value="{{ c }}" {{ 'selected' if city==c }}>{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-primary s-go" type="submit">
+            <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="6"/><path d="m15 15 3 3"/></svg>
+            Ara
+          </button>
+        </div>
+      </form>
+
+      <!-- STATS -->
+      <div class="hero-stats">
+        <div><div class="hs-n">{{ pagination.total }}</div><div class="hs-l">Aktif ilan</div></div>
+        <div><div class="hs-n">{{ sectors|length }}</div><div class="hs-l">Sektör</div></div>
+        <div><div class="hs-n">{{ cities|length }}</div><div class="hs-l">Şehir</div></div>
+      </div>
+    </div>
+
+    <!-- HERO RIGHT — canlı akış -->
+    <div style="position:relative">
+      <div class="feed">
+        <div class="feed-head">
+          <span class="t">Canlı ilan akışı</span>
+          <span class="live"><i></i>Az önce</span>
+        </div>
+        <div class="feed-list">
+          {% for l in listings[:3] %}
+          {% set fav = ['av-blue','av-ink','av-buy','av-sell','av-slate','av-plum'][loop.index0 % 6] %}
+          <a href="/listing/{{ l.id }}" class="fi">
+            <div class="fi-av {{ fav }}">{{ (l.owner.company_name[:2]|upper) if l.owner else '—' }}</div>
+            <div class="fi-main">
+              <div class="fi-top"><span class="fi-tag {{ 'tag-buy' if l.type=='buy' else 'tag-sell' }}">{{ 'Alım' if l.type=='buy' else 'Satım' }}</span><span class="fi-co">{{ l.owner.company_name if l.owner else '—' }}</span></div>
+              <div class="fi-title">{{ l.title }}</div>
+            </div>
+            <div class="fi-meta"><div class="fi-bid">{{ l.offers|length }} teklif</div><div class="fi-ago">{{ l.created_at.strftime('%d.%m') }}</div></div>
+          </a>
+          {% else %}
+          <div style="padding:24px;text-align:center;color:var(--slate-500);font-size:14px">Henüz ilan yok — ilk ilanı siz ekleyin.</div>
+          {% endfor %}
+        </div>
+        <div class="feed-foot"><a href="/">Tüm akışı gör →</a></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PROOF ROW ===== -->
+{% if sectors %}
+<section class="proof">
+  <div class="wrap">
+    <div class="proof-l">Tüm Türkiye'den işletmeler KOBİNET'te buluşuyor</div>
+    <div class="proof-row">
+      {% for s in sectors[:7] %}
+      {% set pav = ['av-ink','av-buy','av-sell','av-blue','av-slate','av-plum','av-ink'][loop.index0 % 7] %}
+      <span class="proof-co"><span class="pm {{ pav }}">{{ s[:1]|upper }}</span>{{ s }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ===== SECTORS ===== -->
+{% if sectors %}
+<section class="section" id="sektorler">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <h2>Sektöre göre keşfet</h2>
+        <p>İşletmenizin alanında dönen alım ve satım fırsatlarına anında ulaşın.</p>
+      </div>
+      <a href="/" class="sec-link">Tüm ilanlar →</a>
+    </div>
+    <div class="sectors">
+      {% for s in sectors[:8] %}
+      <a href="/?sector={{ s }}" class="sec-card">
+        <div class="sec-ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg></div>
+        <div class="sec-tx"><div class="n">{{ s }}</div><div class="c">İlanları gör →</div></div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ===== LISTINGS ===== -->
+<section class="section" style="padding-top:6px">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:20px">
+      <div>
+        <h2>Güncel ilanlar</h2>
+        <p>{{ pagination.total }} aktif ilan{% if q or sector or city or type_ %} · filtrelenmiş sonuçlar{% endif %}.</p>
+      </div>
+    </div>
+
+    <div class="lst-bar">
+      <div class="segs">
+        <a href="/?q={{ q }}&sector={{ sector }}&city={{ city }}" class="seg {{ 'on' if not type_ }}">Tümü</a>
+        <a href="/?q={{ q }}&sector={{ sector }}&city={{ city }}&type=buy" class="seg {{ 'on' if type_=='buy' }}"><span class="sw" style="background:var(--buy)"></span>Alım</a>
+        <a href="/?q={{ q }}&sector={{ sector }}&city={{ city }}&type=sell" class="seg {{ 'on' if type_=='sell' }}"><span class="sw" style="background:var(--sell)"></span>Satım</a>
+      </div>
+      {% if q or sector or city or type_ %}<a href="/" class="lst-sort" style="text-decoration:none">Filtreleri temizle ✕</a>{% endif %}
+    </div>
+
+    {% if listings %}
+
+    <div class="grid">
+      {% for l in listings %}
+      {% set cav = ['av-blue','av-ink','av-buy','av-sell','av-slate','av-plum'][loop.index0 % 6] %}
+      <a href="/listing/{{ l.id }}" class="card {{ l.type }}">
+        <div class="c-badges">
+          <span class="badge {{ 'b-buy' if l.type=='buy' else 'b-sell' }}">{{ 'Alım' if l.type=='buy' else 'Satım' }}</span>
+          {% if l.sector %}<span class="badge b-soft">{{ l.sector }}</span>{% endif %}
+          {% if l.city %}<span class="badge b-soft">{{ l.city }}</span>{% endif %}
+        </div>
+        <div class="c-title">{{ l.title }}</div>
+        {% if l.description %}<div class="c-desc">{{ l.description }}</div>{% endif %}
+        <div class="c-budget"><span class="bl">{{ 'Bütçe' if l.type=='buy' else 'Fiyat' }}</span><span class="bv">{{ l.budget or 'Teklif alınacak' }}</span></div>
+        <div class="c-foot">
+          <div class="c-co">
+            <div class="c-av {{ cav }}">{{ (l.owner.company_name[:2]|upper) if l.owner else '—' }}</div>
+            <div class="c-co-tx">
+              <div class="c-co-n">{{ l.owner.company_name if l.owner else '—' }}{% if l.owner and l.owner.is_verified %}<svg class="vchk" viewBox="0 0 16 16" fill="#1f9d57"><path d="M8 1 2 3.2v3.6C2 10 4.4 12.4 8 13.6 11.6 12.4 14 10 14 6.8V3.2z"/><path d="m5.6 7.6 1.6 1.6 3.2-3.2" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endif %}</div>
+              <div class="c-co-m">{{ l.created_at.strftime('%d.%m.%Y') }}</div>
+            </div>
+          </div>
+          <div class="c-bids"><div class="n">{{ l.offers|length }}</div><div class="l">teklif</div></div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="pager">
+      {% if pagination.has_prev %}<a class="pg" href="/?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pagination.prev_num }}">← Önceki</a>{% endif %}
+      {% for pn in pagination.iter_pages(left_edge=2,right_edge=2,left_current=2,right_current=2) %}
+        {% if pn %}{% if pn==pagination.page %}<span class="pg on">{{ pn }}</span>{% else %}<a class="pg" href="/?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pn }}">{{ pn }}</a>{% endif %}{% else %}<span class="pg dots">…</span>{% endif %}
+      {% endfor %}
+      {% if pagination.has_next %}<a class="pg" href="/?q={{ q }}&sector={{ sector }}&city={{ city }}&type={{ type_ }}&page={{ pagination.next_num }}">Sonraki →</a>{% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h3>İlan bulunamadı</h3>
+      <p>Farklı bir arama deneyin ya da ilk ilanı siz ekleyin.</p>
+      {% if current_user.is_authenticated %}<a href="/create" class="btn btn-primary btn-lg">+ İlan ekle</a>{% else %}<a href="/register" class="btn btn-primary btn-lg">Ücretsiz kayıt ol</a>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section" id="nasil" style="padding-top:6px">
+  <div class="wrap">
+    <div class="how">
+      <div class="how-head">
+        <div class="ey">Nasıl çalışır</div>
+        <h2>İlandan anlaşmaya, üç adımda.</h2>
+        <p>KOBİNET aracıyı aradan çıkarır. Firmalar birbirini doğrudan bulur, konuşur ve anlaşır.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n">1</div>
+          <h3>İlanını ver</h3>
+          <p>Almak ya da satmak istediğini 2 dakikada ilana dök. Fotoğraf ve PDF ekle, bütçeni belirt.</p>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <h3>Teklifleri topla</h3>
+          <p>Doğrulanmış firmalardan fiyat ve koşul teklifleri gelsin. Hepsini tek ekranda karşılaştır.</p>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <h3>Anlaş & büyü</h3>
+          <p>Mesajlaş, anlaş, işi bağla. Komisyon yok, aracı yok — kazanç tamamen senin.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section" style="padding-top:8px">
+  <div class="wrap">
+    <div class="cta">
+      <h2>İlk ilanını bugün ücretsiz ver</h2>
+      <p>Kaydol, firmanı doğrulat ve Türkiye'nin dört bir yanından teklif almaya başla.</p>
+      <div class="cta-btns">
+        {% if current_user.is_authenticated %}
+        <a href="/create" class="btn btn-primary btn-lg">Yeni ilan ekle</a>
+        <a href="/" class="btn btn-outline btn-lg">İlanları keşfet</a>
+        {% else %}
+        <a href="/register" class="btn btn-primary btn-lg">Ücretsiz kayıt ol</a>
+        <a href="/login" class="btn btn-outline btn-lg">Giriş yap</a>
+        {% endif %}
+      </div>
+      <div class="cta-note">Kredi kartı gerekmez · Üyelik tamamen ücretsiz · Komisyon yok</div>
+    </div>
+  </div>
+</section>
+
+
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('.s-tab').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.getElementById('typeField').value = b.dataset.type;
+      document.getElementById('searchForm').submit();
+    });
+  });
+</script>
+{% endblock %}

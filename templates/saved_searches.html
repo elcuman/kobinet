@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block robots %}<meta name="robots" content="noindex,nofollow"/>{% endblock %}
+{% block title %}Kayıtlı Aramalar — KOBİNET{% endblock %}
+{% block extra_head %}
+<style>
+.ss-wrap{padding:40px 0 72px}
+.ss-wrap h1{font-size:22px;font-weight:600;letter-spacing:-.4px;margin-bottom:6px}
+.ss-wrap .sub{font-size:13.5px;color:var(--gray-500);margin-bottom:28px}
+.ss-layout{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+.ss-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.ss-card-head{padding:14px 18px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}
+.ss-card-head h2{font-size:14px;font-weight:600}
+.ss-card-body{padding:18px}
+.ss-item{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:13px 15px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ss-item-left{}
+.ss-item-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.ss-item-date{font-size:11.5px;color:var(--gray-400)}
+.empty-ss{text-align:center;padding:36px 20px;color:var(--gray-400)}
+.empty-ss h3{font-size:15px;font-weight:500;color:var(--gray-600);margin-bottom:6px}
+@media(max-width:760px){.ss-layout{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap ss-wrap">
+  <h1>Kayıtlı Aramalar</h1>
+  <p class="sub">Uygun bir ilan çıkınca e-posta ile bildirim alırsınız.</p>
+
+  <div class="ss-layout">
+    <!-- FORM -->
+    <div class="ss-card">
+      <div class="ss-card-head"><h2>Yeni Arama Ekle</h2></div>
+      <div class="ss-card-body">
+        <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="fg">
+            <label class="label">Anahtar Kelime</label>
+            <input name="keyword" class="input" placeholder="Örn: CNC, elektronik kart, tekstil…">
+            <div class="form-hint">Başlıkta bu kelimeyi içeren ilanlar bildirilir</div>
+          </div>
+          <div class="fg">
+            <label class="label">Sektör</label>
+            <select name="sector" class="input">
+              <option value="">Tüm sektörler</option>
+              {% for s in sectors %}<option>{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label class="label">Şehir</label>
+            <select name="city" class="input">
+              <option value="">Tüm şehirler</option>
+              {% for c in cities %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label class="label">İlan Tipi</label>
+            <select name="type_" class="input">
+              <option value="">Alım & Satım</option>
+              <option value="buy">Sadece Alım</option>
+              <option value="sell">Sadece Satım</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-dark btn-full">Aramayı Kaydet</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- LİST -->
+    <div>
+      <div class="sh">
+        <h2>Kayıtlı Aramalarım ({{ searches|length }})</h2>
+      </div>
+      {% if searches %}
+        {% for s in searches %}
+        <div class="ss-item">
+          <div class="ss-item-left">
+            <div class="ss-item-tags">
+              {% if s.keyword %}<span class="badge badge-sector">🔍 {{ s.keyword }}</span>{% endif %}
+              {% if s.sector  %}<span class="badge badge-sector">{{ s.sector }}</span>{% endif %}
+              {% if s.city    %}<span class="badge badge-city">📍 {{ s.city }}</span>{% endif %}
+              {% if s.type_   %}<span class="badge {{ 'badge-buy' if s.type_=='buy' else 'badge-sell' }}">{{ 'Alım' if s.type_=='buy' else 'Satım' }}</span>{% endif %}
+              {% if not s.keyword and not s.sector and not s.city and not s.type_ %}
+                <span class="badge badge-city">Tüm ilanlar</span>
+              {% endif %}
+            </div>
+            <div class="ss-item-date">{{ s.created_at.strftime('%d.%m.%Y') }} tarihinde oluşturuldu</div>
+          </div>
+          <form method="POST" action="/saved-searches/{{ s.id }}/delete"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn btn-ghost btn-sm" onclick="return confirm('Silinsin mi?')" style="color:var(--gray-400)">Sil</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-ss">
+          <h3>Kayıtlı arama yok</h3>
+          <p style="font-size:13px">Soldan bir arama oluşturun, uygun ilan çıkınca e-posta alırsınız.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

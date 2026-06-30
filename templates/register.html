@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block robots %}<meta name="robots" content="noindex,nofollow"/>{% endblock %}
+{% block title %}Kayıt Ol — KOBİNET{% endblock %}
+{% block extra_head %}
+<style>
+.auth-page{display:flex;align-items:flex-start;justify-content:center;padding:40px 20px 72px}
+.auth-box{width:100%;max-width:500px}
+.auth-head{margin-bottom:22px}
+.auth-head h1{font-size:22px;font-weight:600;letter-spacing:-.4px}
+.auth-head p{font-size:13.5px;color:var(--gray-500);margin-top:4px}
+.auth-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px}
+.sec{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)}
+.auth-foot{text-align:center;margin-top:14px;font-size:13px;color:var(--gray-500)}
+.auth-foot a{color:var(--gray-900);font-weight:500}
+.tax-hint{font-size:11.5px;color:var(--gray-400);margin-top:4px;display:flex;align-items:center;gap:4px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-box">
+    <div class="auth-head">
+      <h1>Hesap oluştur</h1>
+      <p>Tedarik ağına katılmak için şirket bilgilerinizi girin</p>
+    </div>
+    <div class="auth-card">
+      <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="sec">Şirket Bilgileri</div>
+        <div class="fg"><label class="label">Şirket Adı *</label><input name="company_name" class="input" placeholder="Yıldız Makina San. Ltd." required></div>
+        <div class="form-grid">
+          <div class="fg"><label class="label">Sektör *</label><select name="sector" class="input" required><option value="">Seçin…</option>{% for s in ['CNC / Freze','Elektronik','Yazılım / BT','Tekstil','Gıda','İnşaat','Lojistik','Kimya','Makine','Mobilya','Diğer'] %}<option>{{ s }}</option>{% endfor %}</select></div>
+          <div class="fg"><label class="label">Şehir *</label><select name="city" class="input" required><option value="">Seçin…</option>{% for c in ['İstanbul','Ankara','İzmir','Bursa','Kocaeli','Gaziantep','Konya','Mersin','Adana','Antalya','Kayseri','Malatya','Diğer'] %}<option>{{ c }}</option>{% endfor %}</select></div>
+        </div>
+        <div class="fg">
+          <label class="label">Vergi Numarası <span style="color:var(--gray-400);font-weight:400">(isteğe bağlı)</span></label>
+          <input name="tax_no" class="input" placeholder="10 haneli vergi numarası" maxlength="10" pattern="\d{10}">
+          <div class="tax-hint">🔒 Gizli tutulur · Doğrulandı rozeti için admin onayı gerekir</div>
+        </div>
+        <div class="fg"><label class="label">Telefon</label><input name="phone" class="input" placeholder="+90 5XX XXX XX XX"></div>
+        <div class="fg"><label class="label">Açıklama</label><textarea name="description" class="input" rows="3" placeholder="Şirketiniz hakkında kısa bilgi…"></textarea></div>
+        <div class="hr"></div>
+        <div class="sec">Hesap Bilgileri</div>
+        <div class="fg"><label class="label">E-Posta *</label><input name="email" type="email" class="input" placeholder="sirket@ornek.com" required></div>
+        <div class="fg"><label class="label">Şifre *</label><input name="password" type="password" class="input" placeholder="En az 8 karakter" minlength="8" required></div>
+        <button type="submit" class="btn btn-dark btn-full" style="margin-top:4px">Hesap Oluştur →</button>
+      </form>
+    </div>
+    <div class="auth-foot">Zaten hesabınız var mı? <a href="/login">Giriş yapın</a></div>
+  </div>
+</div>
+{% endblock %}

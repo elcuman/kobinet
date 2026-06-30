@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% block title %}{{ listing.title }} — {{ 'Alım' if listing.type=='buy' else 'Satım' }} İlanı | KOBİNET{% endblock %}
+{% block meta_description %}{{ (listing.description or listing.title)|striptags|truncate(155) }} — {{ listing.sector }}{% if listing.city %}, {{ listing.city }}{% endif %}. KOBİNET'te teklif verin.{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ '📥' if listing.type=='buy' else '📤' }} {{ listing.title }}{% endblock %}
+{% block og_description %}{{ listing.sector }}{% if listing.city %} · {{ listing.city }}{% endif %}{% if listing.budget %} · {{ listing.budget }}{% endif %} — {{ (listing.description or '')|striptags|truncate(120) }}{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "{{ 'Demand' if listing.type=='buy' else 'Offer' }}",
+  "name": {{ listing.title|tojson }},
+  "description": {{ (listing.description or '')|striptags|truncate(300)|tojson }},
+  "url": "{{ request.base_url }}",
+  {% if listing.budget %}"priceSpecification": {"@type": "PriceSpecification", "price": {{ listing.budget|tojson }}},{% endif %}
+  {% if listing.city %}"areaServed": {"@type": "City", "name": {{ listing.city|tojson }}},{% endif %}
+  "category": {{ listing.sector|tojson }},
+  "validThrough": "{{ listing.expires_at.strftime('%Y-%m-%d') }}",
+  "seller": {
+    "@type": "Organization",
+    "name": {{ owner.company_name|tojson if owner else '"KOBİNET"' }}
+  }
+}
+</script>
+{% endblock %}
+{% block extra_head %}
+<style>
+.l-wrap{padding:32px 0 72px}
+.back{font-size:13px;color:var(--gray-500);display:inline-flex;align-items:center;gap:4px;margin-bottom:20px}
+.back:hover{color:var(--gray-900)}
+.l-layout{display:grid;grid-template-columns:1fr 272px;gap:18px;align-items:start}
+.l-main{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+
+/* TOP — her zaman görünür */
+.l-top{padding:22px 24px;border-bottom:1px solid var(--gray-200);border-left:3px solid transparent}
+.l-top.buy{border-left-color:#22c55e}.l-top.sell{border-left-color:#eab308}
+.l-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.l-title{font-size:22px;font-weight:600;letter-spacing:-.5px;line-height:1.2}
+.l-budget{font-size:15px;font-weight:500;color:var(--gray-700);margin-top:8px}
+.l-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--gray-500)}
+.l-status{padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500}
+.st-ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.st-warn{background:#fefce8;color:#a16207;border:1px solid #fde68a}
+.st-dead{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+
+/* GİRİŞ KAPISIDUVARI */
+.login-wall{padding:40px 24px;text-align:center;border-top:1px solid var(--gray-200);background:var(--gray-50)}
+.login-wall-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+.login-wall h3{font-size:17px;font-weight:600;color:var(--gray-900);margin-bottom:6px}
+.login-wall p{font-size:14px;color:var(--gray-500);max-width:340px;margin:0 auto 20px}
+.login-wall-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* BLUR ÖNİZLEME */
+.blur-preview{padding:20px 24px;position:relative;overflow:hidden}
+.blur-preview-inner{filter:blur(6px);user-select:none;pointer-events:none;opacity:.6}
+.blur-preview-inner p{font-size:14px;color:var(--gray-600);line-height:1.75;margin-bottom:8px}
+
+/* DOSYALAR */
+.files-block{padding:18px 24px;border-bottom:1px solid var(--gray-200)}
+.files-block h3{font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.file-item{border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;position:relative;background:var(--gray-50)}
+.file-item img{width:100%;height:80px;object-fit:cover;display:block}
+.file-item-pdf{height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(--gray-500);padding:8px;text-decoration:none}
+.file-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:3px;font-size:10px;padding:2px 5px;cursor:pointer;display:none}
+.file-item:hover .file-del{display:block}
+.upload-zone{border:1.5px dashed var(--gray-300);border-radius:var(--radius-md);padding:16px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--gray-50)}
+.upload-zone:hover{border-color:var(--gray-900)}
+.upload-zone input{display:none}
+.upload-zone p{font-size:13px;color:var(--gray-500);margin-top:5px}
+
+/* AÇIKLAMA */
+.l-desc{padding:20px 24px;border-bottom:1px solid var(--gray-200)}
+.l-desc h3{font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.l-desc-text{font-size:14px;color:var(--gray-600);line-height:1.75;white-space:pre-wrap}
+
+/* TEKLİFLER */
+.l-offers{padding:20px 24px}
+.l-offers-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.l-offers-head h3{font-size:15px;font-weight:600}
+.off-cnt{font-size:12px;font-weight:500;background:var(--gray-100);border:1px solid var(--gray-200);padding:2px 8px;border-radius:4px;color:var(--gray-600)}
+.offer{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:13px 15px;margin-bottom:8px}
+.off-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.off-company{font-size:13.5px;font-weight:600}
+.off-price{font-size:15px;font-weight:600}
+.off-date{font-size:11.5px;color:var(--gray-400);margin-top:3px}
+.off-msg{font-size:13.5px;color:var(--gray-600);margin-top:8px;line-height:1.55}
+.off-acts{display:flex;gap:5px;margin-top:10px}
+.no-offer{text-align:center;padding:28px;font-size:13.5px;color:var(--gray-400)}
+
+/* BENZER */
+.similar-block{margin-top:18px}
+.similar-block h3{font-size:13px;font-weight:600;margin-bottom:10px}
+.sim-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:12px 14px;text-decoration:none;color:var(--gray-900);display:block;margin-bottom:7px;transition:border-color .15s;border-left:2px solid transparent}
+.sim-card.buy{border-left-color:#22c55e}.sim-card.sell{border-left-color:#eab308}
+.sim-card:hover{border-color:var(--gray-300)}
+.sim-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.sim-meta{font-size:12px;color:var(--gray-400)}
+
+.side-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px}
+.side-head{padding:11px 14px;border-bottom:1px solid var(--gray-200);font-size:11.5px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;background:var(--gray-50)}
+.side-body{padding:14px}
+.owner-name{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.verified-badge{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.owner-logo{width:36px;height:36px;border-radius:var(--radius);object-fit:cover;border:1px solid var(--gray-200)}
+.owner-row{font-size:13px;color:var(--gray-500);margin-bottom:4px}
+.admin-bar{background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);padding:11px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:820px){.l-layout{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrap l-wrap">
+  <a href="/" class="back">← Tüm İlanlar</a>
+  <div class="l-layout">
+    <div>
+      <div class="l-main">
+
+        <!-- BAŞLIK — herkes görür -->
+        <div class="l-top {{ listing.type }}">
+          <div class="l-badges">
+            <span class="badge {{ 'badge-buy' if listing.type=='buy' else 'badge-sell' }}">{{ "Alım" if listing.type=='buy' else "Satım" }}</span>
+            {% if listing.sector %}<span class="badge badge-sector">{{ listing.sector }}</span>{% endif %}
+            {% if listing.city %}<span class="badge badge-city">{{ listing.city }}</span>{% endif %}
+          </div>
+          <div class="l-title">{{ listing.title }}</div>
+          {% if listing.budget %}<div class="l-budget">{{ listing.budget }}</div>{% endif %}
+          <div class="l-meta">
+            <span>{{ listing.created_at.strftime('%d %B %Y') }}</span>
+            <span>{{ listing.offers|length }} teklif</span>
+            {% if not listing.is_active %}<span class="l-status st-dead">Pasif</span>
+            {% elif listing.is_expired %}<span class="l-status st-dead">Süresi doldu</span>
+            {% elif listing.days_left<=5 %}<span class="l-status st-warn">{{ listing.days_left }} gün kaldı</span>
+            {% else %}<span class="l-status st-ok">{{ listing.days_left }} gün aktif</span>{% endif %}
+          </div>
+        </div>
+
+        {% if needs_login %}
+        <!-- GİRİŞ YAPILMADI — detaylar kilitli -->
+
+        {% if listing.description %}
+        <div class="blur-preview">
+          <div class="blur-preview-inner">
+            <p>{{ listing.description[:200] }}...</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor.</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="login-wall">
+          <div class="login-wall-icon">🔒</div>
+          <h3>Detayları görmek için giriş yapın</h3>
+          <p>Açıklama, fotoğraflar ve teklif vermek için üye olmanız gerekiyor. Üyelik tamamen ücretsiz.</p>
+          <div class="login-wall-btns">
+            <a href="/login?next=/listing/{{ listing.id }}" class="btn btn-dark btn-lg">Giriş Yap</a>
+            <a href="/register" class="btn btn-outline btn-lg">Ücretsiz Kayıt Ol</a>
+          </div>
+        </div>
+
+        {% else %}
+        <!-- GİRİŞ YAPILDI — tüm içerik görünür -->
+
+        {% if listing.files %}
+        <div class="files-block">
+          <h3>Dosyalar & Fotoğraflar</h3>
+          <div class="files-grid">
+            {% for f in listing.files %}
+              {% if f.filetype=='image' %}
+              <div class="file-item">
+                <a href="/uploads/listings/{{ f.filename }}" target="_blank" rel="noopener" title="Tam boyut aç">
+                  <img src="/uploads/listings/{{ f.filename }}" alt="İlan fotoğrafı">
+                </a>
+                {% if current_user.is_authenticated and (listing.user_id==current_user.id or current_user.is_admin) %}
+                <form method="POST" action="/listing/{{ listing.id }}/file/{{ f.id }}/delete" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button class="file-del" onclick="return confirm('Sil?')">✕</button>
+                </form>
+                {% endif %}
+              </div>
+              {% else %}
+              <div class="file-item">
+                <a href="/uploads/listings/{{ f.filename }}" target="_blank" class="file-item-pdf">
+                  <span style="font-size:24px">📄</span><span>PDF</span>
+                </a>
+                {% if current_user.is_authenticated and (listing.user_id==current_user.id or current_user.is_admin) %}
+                <form method="POST" action="/listing/{{ listing.id }}/file/{{ f.id }}/delete" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button class="file-del" onclick="return confirm('Sil?')">✕</button>
+                </form>
+                {% endif %}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if current_user.is_authenticated and listing.user_id==current_user.id %}
+        <div class="files-block" style="border-bottom:1px solid var(--gray-200)">
+          <h3>Dosya Ekle</h3>
+          <form method="POST" action="/listing/{{ listing.id }}/upload" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <label class="upload-zone">
+              <input type="file" name="files" id="file-input" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.pdf">
+              <div style="font-size:20px;margin-bottom:4px">📎</div>
+              <p id="file-prompt">Fotoğraf veya PDF seçin<br><span style="font-size:11px">PNG, JPG, PDF · Maks. 8 MB</span></p>
+            </label>
+            <button type="submit" class="btn btn-outline btn-sm" style="margin-top:8px;width:100%;justify-content:center">Yükle</button>
+          </form>
+        </div>
+        {% endif %}
+
+        {% if listing.description %}
+        <div class="l-desc">
+          <h3>Açıklama</h3>
+          <div class="l-desc-text">{{ listing.description }}</div>
+        </div>
+        {% endif %}
+
+        <div class="l-offers">
+          <div class="l-offers-head">
+            <h3>Teklifler</h3>
+            <span class="off-cnt">{{ offers|length if can_see_offers else '—' }}</span>
+          </div>
+          {% if not can_see_offers %}
+            <div style="text-align:center;padding:24px;color:var(--gray-500)">
+              <div style="font-size:26px;opacity:.3;margin-bottom:8px">🔒</div>
+              <div style="font-size:13.5px;font-weight:500;color:var(--gray-700);margin-bottom:3px">Teklifler gizli</div>
+              <div style="font-size:13px">Yalnızca ilan sahibi görebilir.</div>
+            </div>
+          {% elif offers %}
+            {% for o in offers %}
+            <div class="offer">
+              <div class="off-top">
+                <div style="display:flex;align-items:center;gap:7px">
+                  {% if o.bidder and o.bidder.logo %}<img src="/uploads/logos/{{ o.bidder.logo }}" class="owner-logo">{% endif %}
+                  <span class="off-company">{{ o.bidder.company_name if o.bidder else '—' }}</span>
+                  {% if o.bidder and o.bidder.is_verified %}<span class="verified-badge">✓ Doğrulandı</span>{% endif %}
+                </div>
+                <span class="off-price">{{ o.price }}</span>
+              </div>
+              <div class="off-date">{{ o.created_at.strftime('%d.%m.%Y · %H:%M') }}</div>
+              {% if o.message %}<div class="off-msg">{{ o.message }}</div>{% endif %}
+              <div class="off-acts">
+                {% if listing.user_id==current_user.id and o.bidder %}<a href="/message/{{ o.bidder.id }}" class="btn btn-outline btn-sm">Mesaj</a>{% endif %}
+                {% if o.bidder %}<a href="/profile/{{ o.bidder.id }}" class="btn btn-ghost btn-sm">Profil</a>{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="no-offer">Henüz teklif yok</div>
+          {% endif %}
+        </div>
+
+        {% endif %}{# /needs_login #}
+      </div>
+
+      {% if current_user.is_authenticated and listing.user_id==current_user.id %}
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">
+        <form method="POST" action="/listing/{{ listing.id }}/renew"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/><button class="btn btn-success btn-sm" onclick="return confirm('30 gün uzatılsın mı?')">Yenile (+30 gün)</button></form>
+        <form method="POST" action="/listing/{{ listing.id }}/delete"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/><button class="btn btn-danger btn-sm" onclick="return confirm('Silinsin mi?')">Sil</button></form>
+        {% if listing.renewed_at %}<span style="font-size:12px;color:var(--gray-400);align-self:center">Son yenilenme: {{ listing.renewed_at.strftime('%d.%m.%Y') }}</span>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if current_user.is_authenticated and current_user.is_admin %}
+      <div class="admin-bar">
+        <span style="font-size:11px;font-weight:600;color:#dc2626;text-transform:uppercase">Admin</span>
+        <form method="POST" action="/listing/{{ listing.id }}/toggle"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/><button class="btn btn-sm {{ 'btn-danger' if listing.is_active else 'btn-success' }}">{{ 'Pasife Al' if listing.is_active else 'Aktif Et' }}</button></form>
+        <form method="POST" action="/admin/listing/{{ listing.id }}/delete"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/><button class="btn btn-danger btn-sm" onclick="return confirm('Sil?')">Sil</button></form>
+      </div>
+      {% endif %}
+
+      {% if similar %}
+      <div class="similar-block">
+        <h3>Benzer İlanlar</h3>
+        {% for s in similar %}
+        <a href="/listing/{{ s.id }}" class="sim-card {{ s.type }}">
+          <div class="sim-title">{{ s.title }}</div>
+          <div class="sim-meta">{{ s.sector }}{% if s.city %} · {{ s.city }}{% endif %} · {{ s.offers|length }} teklif</div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="side-card">
+        <div class="side-head">Teklif Ver</div>
+        <div class="side-body">
+          {% if needs_login %}
+            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">Teklif vermek için giriş yapın.</p>
+            <a href="/login?next=/listing/{{ listing.id }}" class="btn btn-dark btn-full" style="margin-bottom:6px">Giriş Yap</a>
+            <a href="/register" class="btn btn-outline btn-full">Kayıt Ol</a>
+          {% elif listing.user_id==current_user.id %}
+            <p style="font-size:13px;color:var(--gray-500)">Kendi ilanınıza teklif veremezsiniz.</p>
+          {% elif listing.is_expired or not listing.is_active %}
+            <p style="font-size:13px;color:var(--gray-500)">Bu ilan artık aktif değil.</p>
+          {% else %}
+            <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <div class="fg"><label class="label">Fiyat *</label><input name="price" class="input" placeholder="Örn: 45.000 ₺" required></div>
+              <div class="fg"><label class="label">Mesaj</label><textarea name="message" class="input" rows="3" placeholder="Teslimat, ödeme koşulları…"></textarea></div>
+              <button type="submit" class="btn btn-dark btn-full">Teklif Gönder</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if owner %}
+      <div class="side-card">
+        <div class="side-head">İlan Sahibi</div>
+        <div class="side-body">
+          <div class="owner-name">
+            {% if owner.logo %}<img src="/uploads/logos/{{ owner.logo }}" class="owner-logo">{% endif %}
+            {{ owner.company_name }}
+            {% if owner.is_verified %}<span class="verified-badge">✓</span>{% endif %}
+          </div>
+          {% if owner.sector %}<div class="owner-row">{{ owner.sector }}</div>{% endif %}
+          {% if owner.city %}<div class="owner-row">📍 {{ owner.city }}</div>{% endif %}
+          {% if owner.tax_no %}<div class="owner-row" style="font-size:11.5px;color:var(--gray-400)">VKN: {{ owner.tax_no[:3] }}*******</div>{% endif %}
+          <div style="display:flex;gap:6px;margin-top:12px">
+            <a href="/profile/{{ owner.id }}" class="btn btn-outline btn-sm btn-full">Profil</a>
+            {% if not needs_login and owner.id!=current_user.id %}<a href="/message/{{ owner.id }}" class="btn btn-dark btn-sm btn-full">Mesaj</a>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Yükle'ye basmadan önce seçilen dosyaların adını göster — sessiz "0 dosya" sorununu önler
+  (function(){
+    var inp = document.getElementById('file-input');
+    var prompt = document.getElementById('file-prompt');
+    if (!inp || !prompt) return;
+    inp.addEventListener('change', function(){
+      if (!inp.files || inp.files.length === 0){
+        prompt.innerHTML = 'Fotoğraf veya PDF seçin<br><span style="font-size:11px">PNG, JPG, PDF · Maks. 8 MB</span>';
+        return;
+      }
+      var names = Array.prototype.map.call(inp.files, function(f){ return f.name; });
+      prompt.innerHTML = '<strong>' + inp.files.length + ' dosya seçildi</strong><br>' +
+        '<span style="font-size:11px">' + names.join(', ') + '</span>';
+    });
+  })();
+</script>
+{% endblock %}

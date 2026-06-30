@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}İlan Yönetimi — Admin{% endblock %}
+{% block extra_head %}
+<style>
+  .adm { padding:44px 0 80px; }
+  .page-head { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:28px; }
+  .page-head h1 { font-family:var(--fd); font-size:48px; letter-spacing:1px; }
+  .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:#B8C8E8; margin-bottom:10px; }
+  .breadcrumb a { color:var(--gold); }
+
+  /* FILTER ROW */
+  .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; align-items:center; }
+  .filter-row .form-control { max-width:300px; }
+  .status-tabs { display:flex; gap:4px; }
+  .s-tab {
+    padding:7px 16px; border-radius:var(--r); font-size:13px; font-weight:600;
+    border:1px solid var(--border); background:var(--bg-card); color:#B8C8E8;
+    text-decoration:none; transition:all .2s; white-space:nowrap;
+  }
+  .s-tab:hover { border-color:rgba(255,255,255,.18); color:var(--text); }
+  .s-tab.active-all     { background:rgba(255,255,255,.08); color:var(--text); border-color:rgba(255,255,255,.18); }
+  .s-tab.active-active  { background:var(--green-dim); color:var(--green); border-color:rgba(74,222,128,.3); }
+  .s-tab.active-expired { background:rgba(245,158,11,.1); color:#F59E0B; border-color:rgba(245,158,11,.3); }
+  .s-tab.active-passive { background:var(--red-dim); color:var(--red); border-color:rgba(248,113,113,.3); }
+
+  /* TABLE */
+  .adm-table-wrap { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-xl); overflow:hidden; }
+  .adm-table-head { padding:18px 22px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.25); display:flex; align-items:center; justify-content:space-between; }
+  .adm-table-head h2 { font-family:var(--fd); font-size:22px; letter-spacing:.5px; }
+  table.lt { width:100%; border-collapse:collapse; }
+  table.lt th { padding:11px 16px; font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#6A7FA8; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; background:rgba(0,0,0,.2); }
+  table.lt td { padding:13px 16px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+  table.lt tr:last-child td { border-bottom:none; }
+  table.lt tr:hover td { background:rgba(255,255,255,.025); }
+  .l-type-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .l-type-dot.buy  { background:var(--green); box-shadow:0 0 6px rgba(74,222,128,.5); }
+  .l-type-dot.sell { background:var(--gold);  box-shadow:0 0 6px rgba(234,179,8,.5); }
+  .status-badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .st-active  { background:var(--green-dim); color:var(--green); border:1px solid rgba(74,222,128,.2); }
+  .st-expired { background:rgba(245,158,11,.1); color:#F59E0B; border:1px solid rgba(245,158,11,.2); }
+  .st-passive { background:var(--red-dim); color:var(--red); border:1px solid rgba(248,113,113,.2); }
+  .days-left  { font-family:var(--fm); font-size:12px; }
+  .dl-ok      { color:var(--green); }
+  .dl-warn    { color:#F59E0B; }
+  .dl-dead    { color:var(--red); }
+  .actions { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+  .adm-table-foot { padding:14px 22px; border-top:1px solid var(--border); background:rgba(0,0,0,.2); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap adm">
+
+  <div class="breadcrumb">
+    <a href="/admin-panel/dashboard">Dashboard</a>
+    <span style="color:#3D4F6E;">›</span>
+    <span>İlan Yönetimi</span>
+  </div>
+
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">🔐 Admin Paneli</div>
+      <h1>İLAN YÖNETİMİ</h1>
+    </div>
+    <a href="/admin-panel/dashboard" class="btn btn-ghost">← Dashboard</a>
+  </div>
+
+  <!-- FİLTRE -->
+  <form method="GET" class="filter-row">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="İlan başlığı ara…">
+    <input type="hidden" name="status" value="{{ status }}">
+    <button type="submit" class="btn btn-gold">Ara</button>
+    {% if q %}<a href="/admin/listings?status={{ status }}" class="btn btn-ghost">✕</a>{% endif %}
+  </form>
+
+  <!-- DURUM TABS -->
+  <div class="filter-row" style="margin-bottom:18px;">
+    <div class="status-tabs">
+      <a href="/admin/listings?q={{ q }}"                class="s-tab {% if not status %}active-all{% endif %}">Tümü</a>
+      <a href="/admin/listings?status=active&q={{ q }}"  class="s-tab {% if status=='active'  %}active-active{% endif %}">✅ Aktif</a>
+      <a href="/admin/listings?status=expired&q={{ q }}" class="s-tab {% if status=='expired' %}active-expired{% endif %}">⏰ Süresi Dolmuş</a>
+      <a href="/admin/listings?status=passive&q={{ q }}" class="s-tab {% if status=='passive' %}active-passive{% endif %}">⛔ Pasif</a>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="adm-table-wrap">
+    <div class="adm-table-head">
+      <h2>{{ pagination.total }} İlan</h2>
+      <span style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">Sayfa {{ pagination.page }}/{{ pagination.pages }}</span>
+    </div>
+
+    <table class="lt">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tip</th>
+          <th>Başlık</th>
+          <th>Şirket</th>
+          <th>Sektör</th>
+          <th>Durum</th>
+          <th>Kalan</th>
+          <th>Bitiş</th>
+          <th>Teklif</th>
+          <th>İşlemler</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in listings %}
+        <tr>
+          <td style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">{{ l.id }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="l-type-dot {{ l.type }}"></span>
+              <span style="font-size:12px;font-weight:700;color:{{ '#4ADE80' if l.type=='buy' else '#EAB308' }};">
+                {{ 'ALIM' if l.type=='buy' else 'SATIM' }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <a href="/listing/{{ l.id }}" style="font-weight:700;color:var(--text);font-size:13.5px;">
+              {{ l.title|truncate(32) }}
+            </a>
+            {% if l.budget %}
+              <div style="font-family:var(--fm);font-size:11px;color:var(--gold);">{{ l.budget }}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if l.owner %}
+              <a href="/profile/{{ l.owner.id }}" style="font-size:13px;font-weight:600;color:#B8C8E8;">
+                {{ l.owner.company_name|truncate(20) }}
+              </a>
+            {% else %}—{% endif %}
+          </td>
+          <td style="font-size:13px;color:#B8C8E8;">{{ l.sector or '—' }}</td>
+          <td>
+            {% if not l.is_active %}
+              <span class="status-badge st-passive">⛔ PASİF</span>
+            {% elif l.is_expired %}
+              <span class="status-badge st-expired">⏰ DOLDU</span>
+            {% else %}
+              <span class="status-badge st-active">✅ AKTİF</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if l.is_expired %}
+              <span class="days-left dl-dead">0 gün</span>
+            {% elif l.days_left <= 5 %}
+              <span class="days-left dl-warn">⚠ {{ l.days_left }}g</span>
+            {% else %}
+              <span class="days-left dl-ok">{{ l.days_left }}g</span>
+            {% endif %}
+          </td>
+          <td style="font-family:var(--fm);font-size:12px;color:#6A7FA8;">{{ l.expires_at.strftime('%d.%m.%Y') }}</td>
+          <td style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--gold);">{{ l.offers|length }}</td>
+          <td>
+            <div class="actions">
+              <!-- GÖRÜNTÜLE -->
+              <a href="/listing/{{ l.id }}" class="btn btn-ghost btn-sm" title="İlanı Gör" style="padding:5px 8px;">👁</a>
+
+              <!-- AKTİF/PASİF TOGGLE -->
+              <form method="POST" action="/listing/{{ l.id }}/toggle" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-sm {{ 'btn-green' if not l.is_active else 'btn-red' }}"
+                  title="{{ 'Aktif Et' if not l.is_active else 'Pasife Al' }}" style="padding:5px 10px;font-size:12px;">
+                  {{ '✅' if not l.is_active else '⛔' }}
+                </button>
+              </form>
+
+              <!-- YENİLE -->
+              <form method="POST" action="/admin/listing/{{ l.id }}/renew" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-cyan btn-sm"
+                  title="30 gün uzat" style="padding:5px 10px;font-size:12px;"
+                  onclick="return confirm('İlan 30 gün uzatılsın mı?')">🔄</button>
+              </form>
+
+              <!-- SİL -->
+              <form method="POST" action="/admin/listing/{{ l.id }}/delete" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-red btn-sm"
+                  title="İlanı Sil" style="padding:5px 10px;font-size:12px;"
+                  onclick="return confirm('{{ l.title|truncate(30) }} ilanı silinsin mi?')">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="adm-table-foot">
+      <span style="font-size:13px;color:#B8C8E8;">
+        Toplam <strong>{{ pagination.total }}</strong> ilan
+        {% if q %}· "<strong>{{ q }}</strong>"{% endif %}
+        {% if status %}· <strong>{{ {'active':'Aktif','expired':'Süresi Dolmuş','passive':'Pasif'}[status] }}</strong>{% endif %}
+      </span>
+
+      {% if pagination.pages > 1 %}
+      <div class="pager" style="padding:0;">
+        {% if pagination.has_prev %}
+          <a href="?q={{ q }}&status={{ status }}&page={{ pagination.prev_num }}" class="nav-p">‹</a>
+        {% endif %}
+        {% for pn in pagination.iter_pages(left_edge=2, right_edge=2, left_current=3, right_current=3) %}
+          {% if pn %}
+            {% if pn == pagination.page %}<span class="on">{{ pn }}</span>
+            {% else %}<a href="?q={{ q }}&status={{ status }}&page={{ pn }}">{{ pn }}</a>{% endif %}
+          {% else %}<span class="dots">…</span>{% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <a href="?q={{ q }}&status={{ status }}&page={{ pagination.next_num }}" class="nav-p">›</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
