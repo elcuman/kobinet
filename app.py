@@ -1455,6 +1455,28 @@ def mailtest_command(recipient):
 # ══════════════════════════════════════════════
 # RUN — sadece lokal geliştirme (python app.py)
 # ══════════════════════════════════════════════
+
+# ... Yukarıdaki kodlar aynen kalıyor ...
+
+    except Exception as e:
+        log.error("WEBHOOK ERROR: %s", e)
+    return "ok"
+
+# ══════════════════════════════════════════════
+# RENDER TABLO OLUŞTURMA (OTOMATİK MİGRASYON)
+# ══════════════════════════════════════════════
+with app.app_context():
+    try:
+        db.create_all()
+        log.info("Render: Veritabanı tabloları başarıyla kontrol edildi/oluşturuldu.")
+    except Exception as e:
+        log.error("Render veritabanı tablosu oluşturulurken hata: %s", e)
+
+# ══════════════════════════════════════════════
+# SEED — admin + sistem kullanıcısı (idempotent)
+# ══════════════════════════════════════════════
+def ensure_seed():
+# ... Alt kısımdaki if __name__=="__main__": bloğuna kadar her şey aynı kalıyor.
 if __name__=="__main__":
     with app.app_context():
         db.create_all()      # lokal SQLite hızlı başlangıç; production'da migration kullanılır
