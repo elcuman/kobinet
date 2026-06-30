@@ -6,7 +6,8 @@ flask-wtf==1.2.1
 flask-limiter==3.8.0
 Flask-Migrate==4.0.7
 gunicorn==22.0.0
-psycopg[binary]
+psycopg2
+pg8000
 requests==2.32.3
 werkzeug==3.0.3
 python-dotenv==1.0.1
